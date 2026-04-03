@@ -22,7 +22,9 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgres://ironengine:ironengine_dev@db:5432/ironengine_development
+      DB_HOST: db
+      DB_USERNAME: ironengine
+      DB_PASSWORD: ironengine_dev
     tty: true
     stdin_open: true
 

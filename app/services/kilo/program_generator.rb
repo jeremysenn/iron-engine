@@ -1,0 +1,248 @@
+# Orchestrator: ties all KILO engine services together to generate a complete program.
+#
+#   Input:  client, goal, volume, frequency (+ optional MAP assessment)
+#   Output: Program (persisted) with full hierarchy down to ExerciseSets
+#
+#   Pipeline:
+#   ┌────────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+#   │ MapAssessment  │──▶│ StrengthRatio│──▶│ Periodization│──▶│ Macrocycle   │
+#   │ Engine         │   │ Calculator   │   │ Engine       │   │ Builder      │
+#   └────────────────┘   └──────────────┘   └──────────────┘   └──────┬───────┘
+#                                                                      │
+#   ┌────────────────┐   ┌──────────────┐   ┌──────────────┐          │
+#   │ Session        │◀──│ Training     │◀──│ Training     │◀─────────┘
+#   │ Generator      │   │ Method Timer │   │ Split Select │
+#   └───────┬────────┘   └──────────────┘   └──────────────┘
+#           │
+#           ▼
+#   ┌────────────────┐
+#   │ persist!       │  Wraps in transaction, creates all records
+#   └────────────────┘
+#
+class Kilo::ProgramGenerator
+  class SeedDataMissing < StandardError; end
+
+  def initialize
+    @map_engine = Kilo::MapAssessmentEngine.new
+    @ratio_calculator = Kilo::StrengthRatioCalculator.new
+    @periodization_engine = Kilo::PeriodizationEngine.new
+    @macrocycle_builder = Kilo::MacrocycleBuilder.new
+    @split_selector = Kilo::TrainingSplitSelector.new
+    @method_timer = Kilo::TrainingMethodTimer.new
+    @session_generator = Kilo::SessionGenerator.new
+  end
+
+  # @param client [Client]
+  # @param assessment [PrimeEightAssessment]
+  # @param goal [String] hypertrophy/absolute_strength/relative_strength/power
+  # @param volume [String] low/medium/high
+  # @param frequency [Integer] 2/3/4
+  # @param map_assessment [MapAssessment, nil] optional MAP for exercise personalization
+  def call(client:, assessment:, goal:, volume:, frequency:, map_assessment: nil)
+    annotations = []
+
+    # Step 1: MAP assessment (optional)
+    movement_result = nil
+    if map_assessment&.map_progressions&.any?
+      movement_result = @map_engine.call(map_assessment)
+      annotations.concat(movement_result.annotations)
+    end
+
+    # Step 2: Strength ratio calculation + limiting lift identification
+    ratio_result = @ratio_calculator.call(assessment)
+    annotations.concat(ratio_result.annotations)
+
+    # Step 3: Periodization model selection
+    model_result = @periodization_engine.call(
+      training_level: client.training_age,
+      volume: volume
+    )
+    annotations.concat(model_result.annotations)
+
+    # Step 4: Macrocycle structure
+    macro_blueprint = @macrocycle_builder.call(
+      limiting_lift_upper: ratio_result.limiting_upper,
+      limiting_lift_lower: ratio_result.limiting_lower,
+      goal: goal,
+      model_id: model_result.model_id
+    )
+    annotations.concat(macro_blueprint.annotations)
+
+    # Step 5-7: For each mesocycle, select split + methods + generate sessions
+    mesocycle_data = macro_blueprint.mesocycles.map do |meso|
+      # Step 5: Training split
+      split_result = select_split_safe(
+        goal: goal,
+        phase: meso[:phase],
+        training_level: client.training_age,
+        frequency: frequency
+      )
+      annotations.concat(split_result.annotations) if split_result
+
+      # Step 6: Training methods
+      method_result = @method_timer.call(
+        phase: meso[:phase],
+        goal: goal,
+        training_level: client.training_age
+      )
+      annotations.concat(method_result.annotations)
+
+      # Step 7: Generate sessions for each week in this mesocycle
+      weeks = (1..meso[:weeks]).map do |week_num|
+        # Get rep scheme for this macrocycle number + phase from periodization model
+        rep_scheme_record = model_result.rep_schemes.find_by(
+          macrocycle_number: 1, # First macrocycle for MVP
+          phase: meso[:phase]
+        )
+
+        session_result = @session_generator.call(
+          split_structure: split_result&.split_structure || default_split(frequency),
+          rep_scheme: rep_scheme_record&.rep_scheme,
+          intensity_pct: rep_scheme_record&.intensity_pct,
+          methods: method_result.methods,
+          movement_result: movement_result,
+          limiting_upper: ratio_result.limiting_upper,
+          limiting_lower: ratio_result.limiting_lower
+        )
+        annotations.concat(session_result.annotations)
+
+        { week_number: meso[:week_start] + week_num - 1, sessions: session_result.sessions }
+      end
+
+      meso.merge(weeks: weeks)
+    end
+
+    # Persist everything in a transaction
+    program = persist!(
+      client: client,
+      goal: goal,
+      volume: volume,
+      frequency: frequency,
+      model_id: model_result.model_id,
+      ratio_result: ratio_result,
+      mesocycle_data: mesocycle_data,
+      annotations: annotations
+    )
+
+    program
+  end
+
+  private
+
+  def select_split_safe(goal:, phase:, training_level:, frequency:)
+    @split_selector.call(
+      goal: goal,
+      phase: phase,
+      training_level: training_level,
+      frequency: frequency
+    )
+  rescue Kilo::TrainingSplitSelector::SplitNotFound => e
+    # Return nil, session generator will use default split
+    result = Kilo::TrainingSplitSelector::SplitBlueprint.new(
+      split_structure: default_split(frequency),
+      frequency: frequency
+    )
+    result.annotate(
+      step: "training_split_selection",
+      rule: "Fallback to default split",
+      value: e.message,
+      decision: "Using default #{frequency}x/week split (seed data not yet available)"
+    )
+    result
+  end
+
+  def default_split(frequency)
+    case frequency
+    when 2
+      { "mon" => "upper_body_1", "thu" => "lower_body_1" }
+    when 3
+      { "mon" => "upper_body_1", "wed" => "lower_body_1", "fri" => "upper_body_2" }
+    when 4
+      { "mon" => "upper_body_1", "tue" => "lower_body_1", "thu" => "upper_body_2", "fri" => "lower_body_2" }
+    else
+      { "mon" => "upper_body_1", "tue" => "lower_body_1", "thu" => "upper_body_2", "fri" => "lower_body_2" }
+    end
+  end
+
+  def persist!(client:, goal:, volume:, frequency:, model_id:, ratio_result:, mesocycle_data:, annotations:)
+    ActiveRecord::Base.transaction do
+      # Archive existing active program
+      client.active_program&.archive!
+
+      # Build generation metadata with version
+      metadata = {
+        metadata_version: 1,
+        generated_at: Time.current.iso8601,
+        model_id: model_id,
+        limiting_upper: ratio_result.limiting_upper.to_s,
+        limiting_lower: ratio_result.limiting_lower.to_s,
+        ratios: ratio_result.ratios.transform_values { |v| v.except(:lift) },
+        annotations: annotations
+      }
+
+      # Create program
+      program = client.programs.create!(
+        goal: goal,
+        training_level: client.training_age,
+        volume: volume,
+        frequency: frequency,
+        limiting_lift_upper: map_limiting_to_enum(ratio_result.limiting_upper, :upper),
+        limiting_lift_lower: map_limiting_to_enum(ratio_result.limiting_lower, :lower),
+        periodization_model: model_id,
+        status: :active,
+        generation_metadata: metadata
+      )
+
+      # Create macrocycle (1 for MVP)
+      macrocycle = program.macrocycles.create!(number: 1, goal_focus: goal)
+
+      # Create mesocycles, microcycles, sessions, exercises, sets
+      mesocycle_data.each do |meso_data|
+        mesocycle = macrocycle.mesocycles.create!(
+          phase: meso_data[:phase],
+          number: meso_data[:number]
+        )
+
+        meso_data[:weeks].each do |week_data|
+          microcycle = mesocycle.microcycles.create!(week_number: week_data[:week_number])
+
+          week_data[:sessions].each do |session_data|
+            session = microcycle.training_sessions.create!(
+              day: day_to_integer(session_data[:day]),
+              session_type: session_data[:session_type]
+            )
+
+            session_data[:exercises].each do |ex_data|
+              session_exercise = session.session_exercises.create!(
+                kilo_exercise_id: ex_data[:kilo_exercise_id],
+                position: ex_data[:position],
+                sets: ex_data[:sets],
+                tempo: ex_data[:tempo],
+                rest_seconds: ex_data[:rest_seconds]
+              )
+
+              ex_data[:sets].times do |i|
+                session_exercise.exercise_sets.create!(
+                  set_number: i + 1,
+                  target_reps: ex_data[:target_reps],
+                  target_weight: 0 # To be calculated from E1RM + intensity_pct
+                )
+              end
+            end
+          end
+        end
+      end
+
+      program
+    end
+  end
+
+  def map_limiting_to_enum(exercise, region)
+    return nil unless exercise
+    "#{region}_#{exercise}"
+  end
+
+  def day_to_integer(day)
+    %w[mon tue wed thu fri sat sun].index(day.to_s.downcase) || 0
+  end
+end
