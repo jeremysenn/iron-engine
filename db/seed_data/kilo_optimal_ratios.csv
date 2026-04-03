@@ -1,0 +1,9 @@
+exercise,body_region,ratio_pct
+squat,lower,100.0
+front_squat,lower,85.0
+deadlift,lower,125.0
+bench_press,upper,100.0
+overhead_press,upper,72.0
+incline_press,upper,91.0
+dip,upper,117.0
+chin_up,upper,87.0
