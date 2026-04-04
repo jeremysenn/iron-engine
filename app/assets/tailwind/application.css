@@ -6,17 +6,6 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Base typography */
-body {
-  font-family: var(--font-body);
-}
-
-/* Utility classes for the design system fonts */
-.font-display {
-  font-family: var(--font-satoshi);
-}
-
-.font-data {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
+body { font-family: var(--font-body); }
+.font-display { font-family: var(--font-satoshi); }
+.font-data { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
