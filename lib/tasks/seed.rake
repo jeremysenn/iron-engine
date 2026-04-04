@@ -28,7 +28,7 @@ namespace :seed do
       puts "Seeding #{table_name}: #{rows.count} rows..."
 
       rows.each do |row|
-        attrs = row.to_h.compact
+        attrs = row.to_h.compact.reject { |_, v| v.to_s.strip.empty? }
         # Find unique key for upsert based on table
         record = case table_name
         when "kilo_rep_intensity_tables"

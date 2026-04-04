@@ -1,0 +1,29 @@
+name,category,equipment,grip_type,grip_width,progression_order,rotation_group
+Back Squat,lower_quad,barbell,,,1,
+Front Squat,lower_quad,barbell,clean,,2,
+Deadlift,lower_hip,barbell,double_overhand,,1,
+Romanian Deadlift,lower_hip,barbell,double_overhand,,2,
+Bench Press,upper_press,barbell,pronated,medium,1,press_oh_flat
+Overhead Press,upper_press,barbell,pronated,medium,1,press_oh_flat
+Incline Press,upper_press,barbell,pronated,medium,1,press_incline_dip
+Dip,upper_press,bodyweight,,,1,press_incline_dip
+Close-Grip Bench Press,upper_press,barbell,pronated,narrow,2,press_oh_flat
+Flat DB Press,upper_press,dumbbell,neutral,,2,press_oh_flat
+Seated DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
+Incline DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
+Chin-Up,upper_pull,bodyweight,supinated,,1,pull_vertical
+Pull-Up,upper_pull,bodyweight,pronated,,1,pull_vertical
+Barbell Row,upper_pull,barbell,pronated,medium,1,pull_horizontal
+Seated Cable Row,upper_pull,cable,neutral,,2,pull_horizontal
+Face Pull,upper_pull,cable,pronated,,3,pull_horizontal
+Lat Pulldown,upper_pull,cable,pronated,wide,2,pull_vertical
+DB Row,upper_pull,dumbbell,neutral,,2,pull_horizontal
+Split Squat,lower_quad,dumbbell,,,3,
+Leg Press,lower_quad,machine,,,3,
+Leg Curl,lower_hip,machine,,,3,
+Goblet Squat,lower_quad,dumbbell,,,4,
+Step-Up,lower_quad,dumbbell,,,4,
+Hip Thrust,lower_hip,barbell,,,2,
+Barbell Curl,upper_arm,barbell,supinated,,1,
+Tricep Pushdown,upper_arm,cable,pronated,,1,
+Lateral Raise,upper_shoulder,dumbbell,,,1,
