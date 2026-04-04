@@ -24,9 +24,9 @@
 
   <body class="bg-slate-50 text-slate-900 font-['DM_Sans',system-ui,sans-serif]">
     <% if user_signed_in? %>
-      <div class="flex min-h-screen">
+      <div class="lg:flex min-h-screen">
         <%= render "layouts/sidebar" %>
-        <main class="flex-1 p-6 lg:p-8 max-w-[1200px]">
+        <main class="flex-1 p-4 lg:p-8 max-w-[1200px]">
           <% if notice.present? %>
             <div class="mb-4 px-4 py-3 rounded-md border-l-3 border-emerald-600 bg-emerald-50 text-emerald-800 text-sm"><%= notice %></div>
           <% end %>

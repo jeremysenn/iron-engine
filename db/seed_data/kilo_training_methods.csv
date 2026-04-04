@@ -1,0 +1,13 @@
+name,category,tempo,description
+IMCA,concentric,4-0-X-0,Intended Maximal Concentric Acceleration
+Starting Strength,concentric,4-0-X-0,Speed-Strength: Starting Strength
+Explosive Strength,concentric,4-0-X-0,Speed-Strength: Explosive Strength
+Reactive Strength,concentric,4-0-X-0,Speed-Strength: Reactive Strength
+Concentric-Eccentric Combo,eccentric,5-0-1-0,Sub-Maximal Eccentric: Concentric-Eccentric Combo
+Extended Eccentric,eccentric,8-0-1-0,Sub-Maximal Eccentric: Extended Eccentric
+Eccentric Hook,eccentric,8-0-1-0,Supra-Maximal Eccentric: Eccentric Hook
+Eccentric Only,eccentric,8-0-0-0,Supra-Maximal Eccentric: Eccentric Only
+Eccentric Pauses,isometric,4-2-1-0,Yielding Isometric: Eccentric Pauses
+Concentric Pauses,isometric,4-0-1-2,Yielding Isometric: Concentric Pauses
+Functional Isometric,isometric,4-0-X-0,Overcoming Isometric: Functional Isometric
+Isometronic,isometric,4-0-X-0,Overcoming Isometric: Isometronic

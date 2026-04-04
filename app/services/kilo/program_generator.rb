@@ -54,6 +54,7 @@ class Kilo::ProgramGenerator
 
     # Step 3: Periodization model selection
     model_result = @periodization_engine.call(
+      goal: goal,
       training_level: client.training_age,
       volume: volume
     )
@@ -89,11 +90,9 @@ class Kilo::ProgramGenerator
 
       # Step 7: Generate sessions for each week in this mesocycle
       weeks = (1..meso[:weeks]).map do |week_num|
-        # Get rep scheme for this macrocycle number + phase from periodization model
-        rep_scheme_record = model_result.rep_schemes.find_by(
-          macrocycle_number: 1, # First macrocycle for MVP
-          phase: meso[:phase]
-        )
+        # Get rep scheme for this phase from the periodization model
+        # seed_phase maps mesocycle position to the correct row in seed data
+        rep_scheme_record = model_result.rep_schemes.find_by(phase: meso[:seed_phase])
 
         session_result = @session_generator.call(
           split_structure: split_result&.split_structure || default_split(frequency),

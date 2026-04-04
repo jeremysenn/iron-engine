@@ -129,35 +129,15 @@ class Kilo::ProgramGeneratorTest < ActiveSupport::TestCase
       { exercise: :chin_up, body_region: :upper, ratio_pct: 87.0 }
     ].each { |a| KiloOptimalRatio.find_or_create_by!(a) }
 
-    # Periodization model 2.2 (Intermediate Medium)
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.2", macrocycle_number: 1, phase: :accumulation) do |m|
-      m.rep_scheme = "5x7"
-      m.intensity_pct = 70.0
-    end
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.2", macrocycle_number: 1, phase: :intensification) do |m|
-      m.rep_scheme = "5x5"
-      m.intensity_pct = 80.0
-    end
-
-    # Periodization model 2.1 (Intermediate Low) for abs strength/low test
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.1", macrocycle_number: 1, phase: :accumulation) do |m|
-      m.rep_scheme = "4x10"
-      m.intensity_pct = 65.0
-    end
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.1", macrocycle_number: 1, phase: :intensification) do |m|
-      m.rep_scheme = "4x6"
-      m.intensity_pct = 82.0
-    end
-
-    # Periodization model 2.3 (Intermediate High) for power/high test
-    # (client is intermediate, volume=high → model 2.3)
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.3", macrocycle_number: 1, phase: :accumulation) do |m|
-      m.rep_scheme = "4x8"
-      m.intensity_pct = 65.0
-    end
-    KiloPeriodizationModel.find_or_create_by!(model_id: "2.3", macrocycle_number: 1, phase: :intensification) do |m|
-      m.rep_scheme = "4x4"
-      m.intensity_pct = 85.0
+    # Seed all 4 phases for each model needed by tests
+    { "2.2" => { acc: ["5x7", 70.0], int: ["5x5", 80.0], acc2: ["4x10", 74.0], int2: ["6x4", 85.0] },
+      "2.1" => { acc: ["4x10", 65.0], int: ["4x6", 82.0], acc2: ["5x9", 76.0], int2: ["5x4", 85.0] },
+      "2.3" => { acc: ["4x8", 65.0], int: ["4x4", 85.0], acc2: ["5x7", 78.0], int2: ["6x3", 90.0] }
+    }.each do |mid, phases|
+      KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :accumulation) { |m| m.rep_scheme = phases[:acc][0]; m.intensity_pct = phases[:acc][1] }
+      KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :intensification) { |m| m.rep_scheme = phases[:int][0]; m.intensity_pct = phases[:int][1] }
+      KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :accumulation_2) { |m| m.rep_scheme = phases[:acc2][0]; m.intensity_pct = phases[:acc2][1] }
+      KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :intensification_2) { |m| m.rep_scheme = phases[:int2][0]; m.intensity_pct = phases[:int2][1] }
     end
 
     # A few exercises so the session generator has something to work with
