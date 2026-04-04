@@ -1,0 +1,51 @@
+<div class="w-full max-w-sm">
+  <div class="text-center mb-8">
+    <h1 class="font-['Satoshi',system-ui,sans-serif] font-black text-3xl text-white mb-2">
+      Iron<span class="text-teal-500">Engine</span>
+    </h1>
+    <p class="text-slate-400 text-sm">KILO-powered program design for strength coaches</p>
+  </div>
+
+  <div class="bg-slate-800 rounded-lg border border-slate-700 p-6">
+    <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg text-white mb-5">Create your account</h2>
+
+    <% if @user.errors.any? %>
+      <div class="mb-4 px-3 py-2 rounded-md border-l-3 border-red-500 bg-red-900/30 text-red-300 text-sm">
+        <ul class="list-disc list-inside">
+          <% @user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @user, url: registration_path, class: "space-y-4" do |form| %>
+      <div>
+        <label for="user_email_address" class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+        <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "email",
+            class: "w-full px-3 py-2.5 rounded-md bg-slate-900 border border-slate-600 text-white text-sm placeholder-slate-500 focus:outline-2 focus:outline-teal-500 focus:-outline-offset-1 focus:border-teal-500" %>
+      </div>
+
+      <div>
+        <label for="user_password" class="block text-sm font-medium text-slate-400 mb-1">Password</label>
+        <%= form.password_field :password, required: true, autocomplete: "new-password", minlength: 8,
+            class: "w-full px-3 py-2.5 rounded-md bg-slate-900 border border-slate-600 text-white text-sm placeholder-slate-500 focus:outline-2 focus:outline-teal-500 focus:-outline-offset-1 focus:border-teal-500" %>
+      </div>
+
+      <div>
+        <label for="user_password_confirmation" class="block text-sm font-medium text-slate-400 mb-1">Confirm password</label>
+        <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", minlength: 8,
+            class: "w-full px-3 py-2.5 rounded-md bg-slate-900 border border-slate-600 text-white text-sm placeholder-slate-500 focus:outline-2 focus:outline-teal-500 focus:-outline-offset-1 focus:border-teal-500" %>
+      </div>
+
+      <div class="pt-1">
+        <%= form.submit "Create account", class: "w-full px-4 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+
+  <p class="text-center mt-6 text-sm text-slate-500">
+    Already have an account?
+    <%= link_to "Sign in", new_session_path, class: "text-teal-500 hover:text-teal-400 font-medium" %>
+  </p>
+</div>
