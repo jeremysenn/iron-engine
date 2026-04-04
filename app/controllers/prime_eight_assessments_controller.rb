@@ -12,20 +12,33 @@ class PrimeEightAssessmentsController < ApplicationController
     @assessment = @client.prime_eight_assessments.build(assessed_at: Time.current)
 
     if @assessment.save
-      # Create lifts from params
+      # Create lifts from params with pre-calculated E1RM
       lifts_params.each do |exercise, attrs|
         next if attrs[:weight].blank?
 
+        weight = attrs[:weight].to_f
+        reps = (attrs[:reps].presence || 1).to_i
+
+        # Pre-calculate E1RM so the record passes validation
+        if reps == 1
+          e1rm = weight
+        elsif reps <= 20
+          intensity = KiloRepIntensityTable.lookup(reps)
+          e1rm = intensity ? (weight / (intensity / 100.0)).round(1) : weight
+        else
+          e1rm = (weight * (1 + 0.0333 * reps)).round(1)
+        end
+
         @assessment.prime_eight_lifts.create!(
           exercise: exercise,
-          weight: attrs[:weight],
-          reps: attrs[:reps].presence || 1,
-          e1rm: 0, # Will be calculated by the service
-          formula_used: :kilo_table
+          weight: weight,
+          reps: reps,
+          e1rm: e1rm,
+          formula_used: reps <= 20 ? :kilo_table : :epley
         )
       end
 
-      # Run the ratio calculator
+      # Run the ratio calculator (recalculates E1RMs and computes ratios)
       calculator = Kilo::StrengthRatioCalculator.new
       @ratio_result = calculator.call(@assessment.reload)
 
