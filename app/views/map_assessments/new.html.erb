@@ -1,0 +1,64 @@
+<%= page_header "MAP Assessment" do %>
+  <%= btn_secondary "Back", client_path(@client) %>
+<% end %>
+
+<p class="text-sm text-slate-500 mb-6">
+  Movement Analysis & Progressions for <strong><%= @client.full_name %></strong>.
+  For each pattern, select the highest level <strong>passed</strong>. Leave blank if not tested.
+</p>
+
+<%= form_with url: client_map_assessments_path(@client), method: :post do |f| %>
+  <% @patterns.each do |region, patterns| %>
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2 mb-4 mt-6">
+      <%= region.to_s.titleize %>
+    </h3>
+
+    <div class="space-y-3 mb-6">
+      <% patterns.each do |pattern| %>
+        <div class="bg-white rounded-md border border-slate-200 p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-medium text-slate-700"><%= pattern[:name] %></div>
+              <% if pattern[:test] %>
+                <div class="text-xs text-slate-400 mt-0.5">Test: <%= pattern[:test] %></div>
+              <% end %>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <% if pattern[:levels] > 0 %>
+                <select name="patterns[<%= pattern[:key] %>][level]"
+                        class="px-3 py-1.5 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+                  <option value="">Not tested</option>
+                  <% (1..pattern[:levels]).each do |lvl| %>
+                    <option value="<%= lvl %>">Level <%= lvl %></option>
+                  <% end %>
+                </select>
+
+                <label class="flex items-center gap-1.5 text-sm text-slate-500">
+                  <input type="hidden" name="patterns[<%= pattern[:key] %>][passed]" value="0">
+                  <input type="checkbox" name="patterns[<%= pattern[:key] %>][passed]" value="1"
+                         class="rounded border-slate-300 text-teal-600 focus:ring-teal-600">
+                  Pass
+                </label>
+              <% else %>
+                <%# Test-only patterns (trunk stability, ankle dorsiflexion) %>
+                <input type="hidden" name="patterns[<%= pattern[:key] %>][level]" value="0">
+                <label class="flex items-center gap-1.5 text-sm text-slate-500">
+                  <input type="hidden" name="patterns[<%= pattern[:key] %>][passed]" value="0">
+                  <input type="checkbox" name="patterns[<%= pattern[:key] %>][passed]" value="1"
+                         class="rounded border-slate-300 text-teal-600 focus:ring-teal-600">
+                  Pass
+                </label>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center gap-3 pt-4">
+    <input type="submit" value="Save Assessment" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors">
+    <%= link_to "Cancel", client_path(@client), class: "text-sm text-slate-500 hover:text-slate-700" %>
+  </div>
+<% end %>

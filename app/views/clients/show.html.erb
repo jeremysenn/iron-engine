@@ -37,6 +37,48 @@
   </div>
 <% end %>
 
+<div class="flex items-center justify-between mb-3">
+  <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg">MAP Assessments</h2>
+  <%= link_to "New MAP", new_client_map_assessment_path(@client), class: "text-sm text-teal-600 hover:text-teal-700 font-medium" %>
+</div>
+
+<% if @map_assessments.any? %>
+  <table class="w-full mb-8">
+    <thead>
+      <tr class="border-b-2 border-slate-200">
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Date</th>
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Patterns</th>
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Status</th>
+        <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @map_assessments.each do |ma| %>
+        <tr class="border-b border-slate-200 hover:bg-slate-100/50">
+          <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm"><%= ma.assessed_at.strftime("%Y-%m-%d") %></td>
+          <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm"><%= ma.map_progressions.count %>/15</td>
+          <td class="px-4 py-3 text-sm">
+            <% if ma.complete? %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Complete</span>
+            <% else %>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Incomplete</span>
+            <% end %>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <%= link_to "View", client_map_assessment_path(@client, ma), class: "text-sm text-teal-600 hover:text-teal-700" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="text-center py-8 bg-white rounded-lg border border-slate-200 mb-8">
+    <p class="text-slate-500 mb-2">No MAP assessments yet.</p>
+    <p class="text-slate-400 text-sm mb-4">Run a MAP assessment to personalize exercise selection based on movement quality.</p>
+    <%= btn_primary "Start MAP Assessment", new_client_map_assessment_path(@client) %>
+  </div>
+<% end %>
+
 <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">PrimeEight Assessments</h2>
 
 <% if @assessments.any? %>

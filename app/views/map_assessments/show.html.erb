@@ -1,0 +1,67 @@
+<%= page_header "MAP Assessment Results" do %>
+  <%= btn_secondary "Back to Client", client_path(@client) %>
+<% end %>
+
+<p class="text-sm text-slate-500 mb-2">
+  Assessed <%= @assessment.assessed_at.strftime("%B %d, %Y") %> ·
+  <%= @assessment.map_progressions.count %>/15 patterns recorded
+</p>
+
+<% if @complete %>
+  <div class="mb-6 px-4 py-3 rounded-md border-l-3 border-emerald-600 bg-emerald-50 text-emerald-800 text-sm">
+    MAP complete. Exercise selection will be personalized based on these movement levels.
+  </div>
+<% else %>
+  <div class="mb-6 px-4 py-3 rounded-md border-l-3 border-amber-500 bg-amber-50 text-amber-800 text-sm">
+    MAP incomplete (<%= @assessment.map_progressions.count %>/15 patterns).
+    All 15 patterns must be assessed for personalized exercise selection.
+  </div>
+<% end %>
+
+<% progressions_by_key = @progressions.index_by(&:movement_pattern) %>
+
+<% @patterns.each do |region, patterns| %>
+  <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2 mb-3 mt-6">
+    <%= region.to_s.titleize %>
+  </h3>
+
+  <table class="w-full mb-6">
+    <thead>
+      <tr class="border-b-2 border-slate-200">
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Pattern</th>
+        <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2 w-24">Level</th>
+        <th class="text-center text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2 w-24">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% patterns.each do |pattern| %>
+        <% prog = progressions_by_key[pattern[:key]] %>
+        <tr class="border-b border-slate-200">
+          <td class="px-4 py-2.5 text-sm font-medium text-slate-700"><%= pattern[:name] %></td>
+          <td class="px-4 py-2.5 text-center font-['JetBrains_Mono',monospace] text-sm">
+            <% if prog %>
+              <% if pattern[:levels] > 0 %>
+                <%= prog.level %>/<%= pattern[:levels] %>
+              <% else %>
+                Test
+              <% end %>
+            <% else %>
+              <span class="text-slate-300">—</span>
+            <% end %>
+          </td>
+          <td class="px-4 py-2.5 text-center text-sm">
+            <% if prog %>
+              <% if prog.passed? %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Pass</span>
+              <% else %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Fail</span>
+              <% end %>
+            <% else %>
+              <span class="text-slate-300">—</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

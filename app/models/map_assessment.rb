@@ -6,6 +6,6 @@ class MapAssessment < ApplicationRecord
   validates :assessed_at, presence: true
 
   def complete?
-    map_progressions.count == 14
+    map_progressions.count >= 15
   end
 end

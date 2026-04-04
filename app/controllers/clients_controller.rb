@@ -9,6 +9,7 @@ class ClientsController < ApplicationController
 
   def show
     @assessments = @client.prime_eight_assessments.order(assessed_at: :desc)
+    @map_assessments = @client.map_assessments.order(assessed_at: :desc)
     @active_program = @client.active_program
   end
 

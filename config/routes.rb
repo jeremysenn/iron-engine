@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
 
   resources :clients do
+    resources :map_assessments, only: %i[new create show]
     resources :prime_eight_assessments, only: %i[new create show]
     resources :programs, only: %i[new create show]
   end
