@@ -1,4 +1,42 @@
-<div>
-  <h1 class="font-bold text-4xl">Dashboard#index</h1>
-  <p>Find me in app/views/dashboard/index.html.erb</p>
+<%= page_header "Dashboard" %>
+
+<div class="grid grid-cols-2 gap-4 mb-8">
+  <div class="bg-white rounded-lg border border-slate-200 p-5">
+    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Total Clients</div>
+    <div class="text-3xl font-['JetBrains_Mono',monospace] font-semibold text-teal-600"><%= Current.user.clients.count %></div>
+  </div>
+  <div class="bg-white rounded-lg border border-slate-200 p-5">
+    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Active Programs</div>
+    <div class="text-3xl font-['JetBrains_Mono',monospace] font-semibold text-teal-600"><%= Current.user.clients.joins(:programs).where(programs: { status: :active }).count %></div>
+  </div>
 </div>
+
+<h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">Recent Clients</h2>
+
+<% recent = Current.user.clients.order(updated_at: :desc).limit(5) %>
+<% if recent.any? %>
+  <table class="w-full">
+    <thead>
+      <tr class="border-b-2 border-slate-200">
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Name</th>
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Training Age</th>
+        <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% recent.each do |client| %>
+        <tr class="border-b border-slate-200 hover:bg-slate-100/50">
+          <td class="px-4 py-3 font-medium"><%= link_to client.full_name, client, class: "text-slate-900 hover:text-teal-600" %></td>
+          <td class="px-4 py-3 text-sm text-slate-500"><%= client.training_age.capitalize %></td>
+          <td class="px-4 py-3 text-right"><%= link_to "View", client, class: "text-sm text-teal-600" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="text-center py-16">
+    <p class="text-slate-500 mb-2">Welcome to IronEngine.</p>
+    <p class="text-slate-400 text-sm mb-6">Add your first client to start building KILO-compliant programs.</p>
+    <%= btn_primary "Add Your First Client", new_client_path %>
+  </div>
+<% end %>

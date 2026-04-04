@@ -1,28 +1,45 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Iron Engine" %></title>
+    <title><%= content_for(:title) || "IronEngine" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Iron Engine">
+    <meta name="application-name" content="IronEngine">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <link rel="preconnect" href="https://api.fontshare.com">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="bg-slate-50 text-slate-900 font-['DM_Sans',system-ui,sans-serif]">
+    <% if user_signed_in? %>
+      <div class="flex min-h-screen">
+        <%= render "layouts/sidebar" %>
+        <main class="flex-1 p-6 lg:p-8 max-w-[1200px]">
+          <% if notice.present? %>
+            <div class="mb-4 px-4 py-3 rounded-md border-l-3 border-emerald-600 bg-emerald-50 text-emerald-800 text-sm"><%= notice %></div>
+          <% end %>
+          <% if alert.present? %>
+            <div class="mb-4 px-4 py-3 rounded-md border-l-3 border-red-600 bg-red-50 text-red-800 text-sm"><%= alert %></div>
+          <% end %>
+          <%= yield %>
+        </main>
+      </div>
+    <% else %>
+      <div class="min-h-screen flex items-center justify-center bg-slate-900">
+        <%= yield %>
+      </div>
+    <% end %>
   </body>
 </html>

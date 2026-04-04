@@ -1,0 +1,68 @@
+<%= page_header @client.full_name do %>
+  <div class="flex items-center gap-3">
+    <%= btn_primary "New Assessment", new_client_prime_eight_assessment_path(@client) %>
+    <%= btn_secondary "Edit", edit_client_path(@client) %>
+  </div>
+<% end %>
+
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Training Age</div>
+    <div class="text-lg font-['Satoshi',system-ui,sans-serif] font-bold"><%= @client.training_age.capitalize %></div>
+  </div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Assessments</div>
+    <div class="text-lg font-['JetBrains_Mono',monospace] font-semibold"><%= @assessments.count %></div>
+  </div>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Active Program</div>
+    <div class="text-lg font-['JetBrains_Mono',monospace] font-semibold">
+      <%= @active_program ? "#{@active_program.goal.titleize}" : "None" %>
+    </div>
+  </div>
+</div>
+
+<% if @active_program %>
+  <div class="mb-8">
+    <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">Active Program</h2>
+    <div class="bg-white rounded-lg border border-slate-200 p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500">
+          <%= @active_program.goal.titleize %> · <%= @active_program.training_level.capitalize %> · Model <%= @active_program.periodization_model %> · <%= @active_program.frequency %>x/week
+        </div>
+        <%= link_to "View Program", client_program_path(@client, @active_program), class: "text-sm text-teal-600 hover:text-teal-700 font-medium" %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">PrimeEight Assessments</h2>
+
+<% if @assessments.any? %>
+  <table class="w-full">
+    <thead>
+      <tr class="border-b-2 border-slate-200">
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Date</th>
+        <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Lifts Recorded</th>
+        <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @assessments.each do |assessment| %>
+        <tr class="border-b border-slate-200 hover:bg-slate-100/50">
+          <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm"><%= assessment.assessed_at.strftime("%Y-%m-%d") %></td>
+          <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm"><%= assessment.prime_eight_lifts.count %>/8</td>
+          <td class="px-4 py-3 text-right">
+            <%= link_to "View Ratios", client_prime_eight_assessment_path(@client, assessment), class: "text-sm text-teal-600 hover:text-teal-700" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="text-center py-12 bg-white rounded-lg border border-slate-200">
+    <p class="text-slate-500 mb-2">No assessments yet.</p>
+    <p class="text-slate-400 text-sm mb-4">Run a PrimeEight assessment to identify limiting lifts and generate a program.</p>
+    <%= btn_primary "Start Assessment", new_client_prime_eight_assessment_path(@client) %>
+  </div>
+<% end %>

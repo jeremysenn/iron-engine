@@ -1,0 +1,20 @@
+<div class="text-center">
+  <h4 class="font-['Satoshi',system-ui,sans-serif] font-semibold text-sm text-slate-500 mb-3"><%= title %></h4>
+  <div class="inline-block bg-white rounded-lg border border-slate-200 p-4">
+    <table class="text-left">
+      <% exercises.each do |exercise, data| %>
+        <tr>
+          <td class="pr-4 py-1 text-sm font-medium text-slate-700"><%= exercise.to_s.titleize %></td>
+          <td class="pr-3 py-1 font-['JetBrains_Mono',monospace] text-sm"><%= number_with_precision(data[:current_ratio], precision: 1) %>%</td>
+          <td class="py-1">
+            <div class="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full rounded-full <%= data[:is_limiting] ? 'bg-red-500' : 'bg-teal-500' %>"
+                   style="width: <%= [data[:current_ratio] / [data[:optimal_ratio], 1].max * 100, 100].min %>%"></div>
+            </div>
+          </td>
+          <td class="pl-3 py-1 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= number_with_precision(data[:optimal_ratio], precision: 0) %>%</td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+</div>

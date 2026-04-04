@@ -1,0 +1,65 @@
+<%= page_header "Strength Ratio Analysis" do %>
+  <div class="flex items-center gap-3">
+    <%= btn_primary "Generate Program", new_client_program_path(@client) %>
+    <%= btn_secondary "Back to Client", client_path(@client) %>
+  </div>
+<% end %>
+
+<p class="text-sm text-slate-500 mb-6">
+  Assessed <%= @assessment.assessed_at.strftime("%B %d, %Y") %> · <%= @assessment.prime_eight_lifts.count %>/8 lifts recorded
+</p>
+
+<%# Radar Chart %>
+<div class="flex flex-wrap gap-8 justify-center mb-8">
+  <%= render "prime_eight_assessments/radar_chart",
+             title: "Lower Body",
+             exercises: @ratio_result.select { |_, d| d[:body_region] == "lower" } %>
+  <%= render "prime_eight_assessments/radar_chart",
+             title: "Upper Body",
+             exercises: @ratio_result.select { |_, d| d[:body_region] == "upper" } %>
+</div>
+
+<%# Data Table %>
+<table class="w-full">
+  <thead>
+    <tr class="border-b-2 border-slate-200">
+      <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Exercise</th>
+      <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">E1RM</th>
+      <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Ratio</th>
+      <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Optimal</th>
+      <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Discrepancy</th>
+      <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @ratio_result.each do |exercise, data| %>
+      <tr class="border-b border-slate-200 <%= 'bg-red-50' if data[:is_limiting] %>">
+        <td class="px-4 py-3 font-medium text-sm"><%= exercise.to_s.titleize %></td>
+        <td class="px-4 py-3 text-right font-['JetBrains_Mono',monospace] text-sm"><%= number_with_precision(data[:e1rm], precision: 1) %></td>
+        <td class="px-4 py-3 text-right font-['JetBrains_Mono',monospace] text-sm"><%= number_with_precision(data[:current_ratio], precision: 1) %>%</td>
+        <td class="px-4 py-3 text-right font-['JetBrains_Mono',monospace] text-sm text-slate-500"><%= number_with_precision(data[:optimal_ratio], precision: 1) %>%</td>
+        <td class="px-4 py-3 text-right font-['JetBrains_Mono',monospace] text-sm font-semibold
+          <%= if data[:discrepancy] >= 0
+                'text-emerald-600'
+              elsif data[:discrepancy] > -3
+                'text-amber-600'
+              else
+                'text-red-600'
+              end %>">
+          <%= data[:discrepancy] >= 0 ? "+" : "" %><%= number_with_precision(data[:discrepancy], precision: 1) %>%
+        </td>
+        <td class="px-4 py-3 text-sm">
+          <% if data[:is_limiting] %>
+            <span class="font-semibold text-red-600">LIMITING ▼</span>
+          <% elsif data[:discrepancy] >= 0 %>
+            <span class="text-emerald-600">Optimal</span>
+          <% elsif data[:discrepancy] > -3 %>
+            <span class="text-amber-600">Close</span>
+          <% else %>
+            <span class="text-red-600">Below</span>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -1,0 +1,110 @@
+<%= page_header @client.full_name do %>
+  <div class="flex items-center gap-3">
+    <%= btn_secondary "Back to Client", client_path(@client) %>
+  </div>
+<% end %>
+
+<div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-6">
+  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · Model <%= @program.periodization_model %> · <%= @program.frequency %>x/week
+</div>
+
+<%# Macrocycle Timeline %>
+<div class="mb-8">
+  <h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Macrocycle Timeline</h2>
+  <div class="grid grid-cols-12 gap-0.5">
+    <% week = 0 %>
+    <% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
+      <% mesocycle.microcycles.order(:week_number).each do |micro| %>
+        <% week += 1 %>
+        <div class="px-1 py-2 text-center rounded-sm text-white text-xs font-['JetBrains_Mono',monospace] font-medium
+          <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>">
+          W<%= week %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+  <div class="grid grid-cols-4 mt-1">
+    <% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
+      <div class="text-center font-['JetBrains_Mono',monospace] text-[10px] text-slate-400">
+        <%= mesocycle.phase.titleize %> <%= mesocycle.number %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%# Session Accordion %>
+<h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Sessions</h2>
+
+<% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
+  <div class="mb-6">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-2 flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded-sm <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>"></span>
+      <%= mesocycle.phase.titleize %> <%= mesocycle.number %>
+    </h3>
+
+    <% mesocycle.microcycles.order(:week_number).each do |micro| %>
+      <details class="border border-slate-200 rounded-md mb-1 bg-white">
+        <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Week <%= micro.week_number %>
+          <span class="text-slate-400 font-normal ml-2"><%= micro.training_sessions.count %> sessions</span>
+        </summary>
+
+        <div class="px-4 pb-3">
+          <% micro.training_sessions.order(:day).each do |session| %>
+            <div class="mt-3">
+              <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
+                <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200">
+                    <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-10">Pos</th>
+                    <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1">Exercise</th>
+                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Sets</th>
+                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Reps</th>
+                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-16">Tempo</th>
+                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Rest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% session.session_exercises.order(:position).each do |se| %>
+                    <tr class="border-b border-slate-100
+                      <%= se.position.start_with?('A') ? 'border-l-2 border-l-teal-500' : '' %>
+                      <%= se.position.start_with?('B') ? 'border-l-2 border-l-slate-300' : '' %>">
+                      <td class="px-2 py-1.5 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= se.position %></td>
+                      <td class="px-2 py-1.5 font-medium"><%= se.kilo_exercise&.name || "—" %></td>
+                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.sets %></td>
+                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.exercise_sets.first&.target_reps || "—" %></td>
+                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.tempo %></td>
+                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.rest_seconds %>s</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  </div>
+<% end %>
+
+<%# Show Your Work %>
+<% if @program.generation_metadata&.dig("annotations")&.any? %>
+  <details class="mt-8 border border-slate-200 rounded-md bg-white">
+    <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-teal-600 hover:bg-slate-50">
+      Show Reasoning
+    </summary>
+    <div class="px-4 pb-4 space-y-2">
+      <% @program.generation_metadata["annotations"].each do |ann| %>
+        <div class="bg-slate-50 rounded-md p-3">
+          <div class="font-['JetBrains_Mono',monospace] text-xs text-teal-600 mb-0.5"><%= ann["step"] %></div>
+          <div class="text-sm font-medium text-slate-700"><%= ann["rule"] %></div>
+          <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500"><%= ann["value"] %></div>
+          <div class="text-sm text-slate-600 mt-0.5"><%= ann["decision"] %></div>
+        </div>
+      <% end %>
+    </div>
+  </details>
+<% end %>
