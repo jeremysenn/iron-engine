@@ -14,6 +14,7 @@ class PrimeEightAssessmentsController < ApplicationController
     if @assessment.save
       # Create lifts from params with pre-calculated E1RM
       lifts_params.each do |exercise, attrs|
+        attrs = attrs.symbolize_keys
         next if attrs[:weight].blank?
 
         weight = attrs[:weight].to_f
