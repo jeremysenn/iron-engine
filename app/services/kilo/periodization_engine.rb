@@ -27,7 +27,7 @@ class Kilo::PeriodizationEngine
     ["advanced", "high"] => "3.3"
   }.freeze
 
-  VALID_GOALS = %w[hypertrophy absolute_strength relative_strength power].freeze
+  VALID_GOALS = %w[hypertrophy absolute_strength relative_strength power balanced].freeze
   VALID_LEVELS = %w[novice intermediate advanced].freeze
   VALID_VOLUMES = %w[low medium high].freeze
 

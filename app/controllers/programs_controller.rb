@@ -6,19 +6,11 @@ class ProgramsController < ApplicationController
 
   def new
     @assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
-
-    unless @assessment&.prime_eight_lifts&.any?
-      redirect_to client_path(@client), alert: "Run a PrimeEight assessment first."
-    end
+    @has_assessment = @assessment&.prime_eight_lifts&.any?
   end
 
   def create
     assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
-
-    unless assessment
-      redirect_to client_path(@client), alert: "Run a PrimeEight assessment first."
-      return
-    end
 
     generator = Kilo::ProgramGenerator.new
     @program = generator.call(
@@ -35,6 +27,7 @@ class ProgramsController < ApplicationController
          Kilo::StrengthRatioCalculator::MissingBaselineError,
          Kilo::StrengthRatioCalculator::InsufficientDataError,
          Kilo::PeriodizationEngine::SeedDataMissing,
+         Kilo::PeriodizationEngine::InvalidGoal,
          Kilo::TrainingSplitSelector::SplitNotFound => e
     redirect_to new_client_program_path(@client), alert: "Generation failed: #{e.message}"
   end

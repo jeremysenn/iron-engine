@@ -48,9 +48,14 @@ class Kilo::ProgramGenerator
       annotations.concat(movement_result.annotations)
     end
 
-    # Step 2: Strength ratio calculation + limiting lift identification
-    ratio_result = @ratio_calculator.call(assessment)
-    annotations.concat(ratio_result.annotations)
+    # Step 2: Strength ratio calculation + limiting lift identification (optional)
+    ratio_result = nil
+    if assessment&.prime_eight_lifts&.count.to_i >= 4
+      ratio_result = @ratio_calculator.call(assessment)
+      annotations.concat(ratio_result.annotations)
+    else
+      annotations << { step: "ratio_calculation", rule: "No assessment", value: "Skipped", decision: "Using balanced macrocycle template (no limiting lift prioritization)" }
+    end
 
     # Step 3: Periodization model selection
     model_result = @periodization_engine.call(
@@ -62,8 +67,8 @@ class Kilo::ProgramGenerator
 
     # Step 4: Macrocycle structure
     macro_blueprint = @macrocycle_builder.call(
-      limiting_lift_upper: ratio_result.limiting_upper,
-      limiting_lift_lower: ratio_result.limiting_lower,
+      limiting_lift_upper: ratio_result&.limiting_upper,
+      limiting_lift_lower: ratio_result&.limiting_lower,
       goal: goal,
       model_id: model_result.model_id
     )
@@ -100,8 +105,8 @@ class Kilo::ProgramGenerator
           intensity_pct: rep_scheme_record&.intensity_pct,
           methods: method_result.methods,
           movement_result: movement_result,
-          limiting_upper: ratio_result.limiting_upper,
-          limiting_lower: ratio_result.limiting_lower
+          limiting_upper: ratio_result&.limiting_upper,
+          limiting_lower: ratio_result&.limiting_lower
         )
         annotations.concat(session_result.annotations)
 
@@ -173,9 +178,9 @@ class Kilo::ProgramGenerator
         metadata_version: 1,
         generated_at: Time.current.iso8601,
         model_id: model_id,
-        limiting_upper: ratio_result.limiting_upper.to_s,
-        limiting_lower: ratio_result.limiting_lower.to_s,
-        ratios: ratio_result.ratios.transform_values { |v| v.except(:lift) },
+        limiting_upper: ratio_result&.limiting_upper.to_s,
+        limiting_lower: ratio_result&.limiting_lower.to_s,
+        ratios: ratio_result ? ratio_result.ratios.transform_values { |v| v.except(:lift) } : {},
         annotations: annotations
       }
 
@@ -185,8 +190,8 @@ class Kilo::ProgramGenerator
         training_level: client.training_age,
         volume: volume,
         frequency: frequency,
-        limiting_lift_upper: map_limiting_to_enum(ratio_result.limiting_upper, :upper),
-        limiting_lift_lower: map_limiting_to_enum(ratio_result.limiting_lower, :lower),
+        limiting_lift_upper: ratio_result ? map_limiting_to_enum(ratio_result.limiting_upper, :upper) : nil,
+        limiting_lift_lower: ratio_result ? map_limiting_to_enum(ratio_result.limiting_lower, :lower) : nil,
         periodization_model: model_id,
         status: :active,
         generation_metadata: metadata

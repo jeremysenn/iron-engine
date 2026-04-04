@@ -1,3 +1,14 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Gear/cog outer shape - the "Engine" -->
+  <path d="M256 48l30 52h60l30-52 42 24-10 58 42 42 58-10 24 42-52 30v60l52 30-24 42-58-10-42 42 10 58-42 24-30-52h-60l-30 52-42-24 10-58-42-42-58 10-24-42 52-30v-60l-52-30 24-42 58 10 42-42-10-58z" fill="#0F172A" stroke="#0D9488" stroke-width="8"/>
+  <!-- Inner circle -->
+  <circle cx="256" cy="256" r="120" fill="#0F172A" stroke="#0D9488" stroke-width="6"/>
+  <!-- Barbell horizontal bar - the "Iron" -->
+  <rect x="96" y="244" width="320" height="24" rx="4" fill="#0D9488"/>
+  <!-- Left plates -->
+  <rect x="108" y="208" width="36" height="96" rx="6" fill="#0D9488"/>
+  <rect x="80" y="220" width="28" height="72" rx="4" fill="#0D9488" opacity="0.7"/>
+  <!-- Right plates -->
+  <rect x="368" y="208" width="36" height="96" rx="6" fill="#0D9488"/>
+  <rect x="404" y="220" width="28" height="72" rx="4" fill="#0D9488" opacity="0.7"/>
 </svg>

@@ -3,7 +3,7 @@ class Program < ApplicationRecord
 
   has_many :macrocycles, dependent: :destroy
 
-  enum :goal, { hypertrophy: 0, absolute_strength: 1, relative_strength: 2, power: 3 }
+  enum :goal, { hypertrophy: 0, absolute_strength: 1, relative_strength: 2, power: 3, balanced: 4 }
   enum :training_level, { novice: 0, intermediate: 1, advanced: 2 }
   enum :volume, { low: 0, medium: 1, high: 2 }
   enum :status, { active: 0, archived: 1 }
