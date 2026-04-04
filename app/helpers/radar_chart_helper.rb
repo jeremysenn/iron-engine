@@ -7,13 +7,19 @@ module RadarChartHelper
   # Optimal ratios shown as dashed outline, actual as filled polygon.
   # Limiting lift point highlighted in red.
   #
-  def radar_chart_svg(exercises, size: 240)
+  LABEL_SHORT = {
+    squat: "SQ", front_squat: "FS", deadlift: "DL",
+    bench_press: "BP", overhead_press: "OHP", incline_press: "INC",
+    dip: "DIP", chin_up: "CU"
+  }.freeze
+
+  def radar_chart_svg(exercises, size: 300)
     return "" if exercises.empty?
 
     cx = size / 2.0
     cy = size / 2.0
-    radius = size * 0.35
-    label_radius = size * 0.46
+    radius = size * 0.30
+    label_radius = size * 0.43
     n = exercises.size
     entries = exercises.to_a
 
@@ -103,16 +109,17 @@ module RadarChartHelper
                             stroke: "white", stroke_width: is_lim ? 2 : 1.5)
       end
 
-      # Labels
+      # Labels (short name + ratio on two lines)
       labels.each do |lbl|
         color = lbl[:is_limiting] ? "#dc2626" : "#64748b"
+        short = LABEL_SHORT[lbl[:name]] || lbl[:name].to_s.titleize
         parts << content_tag(:text, nil, x: lbl[:x], y: lbl[:y],
                              text_anchor: lbl[:anchor], fill: color,
                              font_family: "'JetBrains Mono', monospace",
-                             font_size: 10, font_weight: lbl[:is_limiting] ? 600 : 400) do
+                             font_size: 11, font_weight: lbl[:is_limiting] ? 600 : 400) do
           safe_join([
-            content_tag(:tspan, lbl[:name].to_s.titleize, x: lbl[:x], dy: 0),
-            content_tag(:tspan, " #{lbl[:ratio].round(0)}%", font_size: 9)
+            content_tag(:tspan, short, x: lbl[:x], dy: 0),
+            content_tag(:tspan, "#{lbl[:ratio].round(0)}%", x: lbl[:x], dy: 13, font_size: 10, fill: color)
           ])
         end
       end
