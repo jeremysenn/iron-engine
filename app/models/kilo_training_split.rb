@@ -6,5 +6,5 @@ class KiloTrainingSplit < ApplicationRecord
   validates :goal, presence: true
   validates :phase, presence: true
   validates :training_level, presence: true
-  validates :frequency, presence: true, inclusion: { in: 2..4 }
+  validates :frequency, presence: true, inclusion: { in: 2..6 }
 end
