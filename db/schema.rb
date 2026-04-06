@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_03_224752) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_133801) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_224752) do
   create_table "kilo_exercises", force: :cascade do |t|
     t.string "category"
     t.datetime "created_at", null: false
+    t.boolean "custom", default: false, null: false
     t.string "equipment"
     t.string "grip_type"
     t.string "grip_width"
@@ -58,6 +59,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_224752) do
     t.integer "progression_order"
     t.integer "rotation_group"
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["user_id"], name: "index_kilo_exercises_on_user_id"
   end
 
   create_table "kilo_macrocycle_templates", force: :cascade do |t|
@@ -210,7 +213,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_224752) do
 
   create_table "session_exercises", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "kilo_exercise_id", null: false
+    t.string "exercise_name"
+    t.bigint "kilo_exercise_id"
     t.string "position"
     t.integer "rest_seconds"
     t.integer "sets"
@@ -262,6 +266,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_03_224752) do
   add_foreign_key "exercise_sets", "session_exercises"
   add_foreign_key "kilo_exercise_pairings", "kilo_exercises", column: "paired_exercise_id"
   add_foreign_key "kilo_exercise_pairings", "kilo_exercises", column: "primary_exercise_id"
+  add_foreign_key "kilo_exercises", "users"
   add_foreign_key "macrocycles", "programs"
   add_foreign_key "map_assessments", "clients"
   add_foreign_key "map_progressions", "map_assessments"

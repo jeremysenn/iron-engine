@@ -103,14 +103,17 @@ class Kilo::ProgramGenerator
         # seed_phase maps mesocycle position to the correct row in seed data
         rep_scheme_record = model_result.rep_schemes.find_by(phase: meso[:seed_phase])
 
+        # Select microcycle structure based on phase
+        is_acc = meso[:phase] == :accumulation
+        current_structure = is_acc ? @acc_structure : @int_structure
+
         session_result = @session_generator.call(
           split_structure: split_result&.split_structure || default_split(frequency),
           rep_scheme: rep_scheme_record&.rep_scheme,
           intensity_pct: rep_scheme_record&.intensity_pct,
+          microcycle_structure: current_structure,
           methods: method_result.methods,
-          movement_result: movement_result,
-          limiting_upper: ratio_result&.limiting_upper,
-          limiting_lower: ratio_result&.limiting_lower
+          movement_result: movement_result
         )
         annotations.concat(session_result.annotations)
 
@@ -223,18 +226,21 @@ class Kilo::ProgramGenerator
             )
 
             session_data[:exercises].each do |ex_data|
+              sets_count = ex_data[:sets].is_a?(Integer) ? ex_data[:sets] : ex_data[:sets].to_s.to_i
+
               session_exercise = session.session_exercises.create!(
                 kilo_exercise_id: ex_data[:kilo_exercise_id],
+                exercise_name: ex_data[:exercise_name],
                 position: ex_data[:position],
-                sets: ex_data[:sets],
+                sets: [sets_count, 1].max,
                 tempo: ex_data[:tempo],
-                rest_seconds: ex_data[:rest_seconds]
+                rest_seconds: ex_data[:rest_seconds] || 60
               )
 
-              ex_data[:sets].times do |i|
+              [sets_count, 1].max.times do |i|
                 session_exercise.exercise_sets.create!(
                   set_number: i + 1,
-                  target_reps: ex_data[:target_reps],
+                  target_reps: ex_data[:target_reps].to_s.split("-").first.to_i,
                   target_weight: 0 # To be calculated from E1RM + intensity_pct
                 )
               end

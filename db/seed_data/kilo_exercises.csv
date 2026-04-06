@@ -11,6 +11,7 @@ Close-Grip Bench Press,upper_press,barbell,pronated,narrow,2,press_oh_flat
 Flat DB Press,upper_press,dumbbell,neutral,,2,press_oh_flat
 Seated DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
 Incline DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
+Decline DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
 Chin-Up,upper_pull,bodyweight,supinated,,1,pull_vertical
 Pull-Up,upper_pull,bodyweight,pronated,,1,pull_vertical
 Barbell Row,upper_pull,barbell,pronated,medium,1,pull_horizontal
@@ -21,9 +22,24 @@ DB Row,upper_pull,dumbbell,neutral,,2,pull_horizontal
 Split Squat,lower_quad,dumbbell,,,3,
 Leg Press,lower_quad,machine,,,3,
 Leg Curl,lower_hip,machine,,,3,
+Leg Extension,lower_quad,machine,,,3,
 Goblet Squat,lower_quad,dumbbell,,,4,
 Step-Up,lower_quad,dumbbell,,,4,
 Hip Thrust,lower_hip,barbell,,,2,
+Calf Raise,lower_calf,machine,,,1,
+Back Extension,lower_hip,bodyweight,,,3,
 Barbell Curl,upper_arm,barbell,supinated,,1,
 Tricep Pushdown,upper_arm,cable,pronated,,1,
+Tricep Extension,upper_arm,dumbbell,neutral,,2,
 Lateral Raise,upper_shoulder,dumbbell,,,1,
+External Rotation,upper_shoulder,dumbbell,,,1,
+Trap 3 Raise,upper_shoulder,dumbbell,,,1,
+Lunge,lower_quad,dumbbell,,,3,
+Hack Squat,lower_quad,barbell,,,2,
+Squat - Pin Touch,lower_quad,barbell,,,2,
+Cyclist Squat,lower_quad,barbell,,,2,
+Deadlift - Rack,lower_hip,barbell,,,2,
+Deadlift - Trap Bar,lower_hip,barbell,,,2,
+Crunch,abdominal,bodyweight,,,1,
+Ab Rollout,abdominal,bodyweight,,,2,
+Push-Up,upper_press,bodyweight,,,3,

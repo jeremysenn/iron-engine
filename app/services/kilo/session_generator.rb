@@ -1,50 +1,62 @@
-# Generates full training sessions with exercises, sets, reps, tempo, and rest.
+# Generates training sessions from KILO session templates.
 #
-#   Input:  split_structure, rep_scheme, training_methods, movement_result (MAP),
-#           ratio_result (for exercise prioritization based on limiting lifts)
-#   Output: SessionBlueprint[] (array of session blueprints, one per training day)
+# Each session type (overhead_press, squat_1, etc.) has a fixed template
+# from the Program Design Resource that defines exercise slots with
+# default exercises, set/rep ranges, tempos, and rest periods.
 #
-#   Pipeline position: 7th (after all other services, before program generator persists)
+# The A-series rep scheme is overridden by the periodization model.
+# B and C series use the template's fixed ranges.
 #
-#   Session structure:
-#     Each session has exercises in positions A1/A2, B1/B2, C1/C2 (superset pairs)
-#     The 90-degree principle governs exercise pairing within sessions and across microcycles
-#     Grip types and widths are selected per the KILO exercise selection rules
+# Coaches can override any exercise in any slot. The defaults follow
+# the 90-degree principle and grip selection rules automatically.
+#
+# MAP Assessment integration: when a movement result is provided,
+# exercise progressions are substituted for clients who can't perform
+# the standard movement at the required level.
 #
 class Kilo::SessionGenerator
   class SessionBlueprint < Kilo::Result
     attr_reader :sessions
   end
 
-  class ExerciseNotFound < StandardError; end
-  class PairingNotFound < StandardError; end
-
   # Generates session blueprints for one microcycle (1 week)
   #
-  # @param split_structure [Hash] day → session_type mapping
-  # @param rep_scheme [String] e.g. "5x7" for the current phase
-  # @param intensity_pct [Decimal] e.g. 80.0
-  # @param methods [Array<KiloTrainingMethod>] assigned methods for this phase
-  # @param movement_result [Kilo::MapAssessmentEngine::MovementResult, nil]
-  # @param limiting_upper [Symbol] upper body limiting lift
-  # @param limiting_lower [Symbol] lower body limiting lift
-  def call(split_structure:, rep_scheme: nil, intensity_pct: nil, methods: [],
-           movement_result: nil, limiting_upper: nil, limiting_lower: nil)
+  # @param microcycle_structure [Hash] the selected structure from MicrocycleStructures
+  # @param split_structure [Hash] day -> session_type mapping (from training split)
+  # @param rep_scheme [String] A-series rep scheme from periodization model
+  # @param intensity_pct [Decimal] A-series intensity from periodization model
+  # @param exercise_overrides [Hash] position-keyed overrides from coach (optional)
+  # @param movement_result [MovementResult] MAP assessment result (optional)
+  def call(split_structure:, rep_scheme: nil, intensity_pct: nil,
+           microcycle_structure: nil, exercise_overrides: {},
+           movement_result: nil, methods: [], **_ignored)
 
     sessions = []
 
     split_structure.each do |day, session_type|
-      exercises = build_exercises_for_session(
-        session_type: session_type.to_s,
+      # Resolve session type: if it's a generic type like "upper_body_1",
+      # use the microcycle structure to get the specific template
+      resolved_type = resolve_session_type(session_type.to_s, microcycle_structure)
+      template = Kilo::SessionTemplates.for(resolved_type)
+
+      # Fall back to a generic session if no template found
+      unless template
+        sessions << { day: day.to_s, session_type: session_type.to_s, template_name: session_type.to_s.titleize, exercises: [] }
+        next
+      end
+
+      exercises = build_from_template(
+        template: template,
         rep_scheme: rep_scheme,
         intensity_pct: intensity_pct,
-        limiting_upper: limiting_upper,
-        limiting_lower: limiting_lower
+        overrides: exercise_overrides.dig(day.to_s) || {},
+        movement_result: movement_result
       )
 
       sessions << {
         day: day.to_s,
-        session_type: session_type.to_s,
+        session_type: resolved_type,
+        template_name: template[:name],
         exercises: exercises
       }
     end
@@ -53,9 +65,9 @@ class Kilo::SessionGenerator
 
     result.annotate(
       step: "session_generation",
-      rule: "Split structure → session exercises",
-      value: "#{sessions.size} sessions generated",
-      decision: sessions.map { |s| "#{s[:day]}: #{s[:session_type]} (#{s[:exercises].size} exercises)" }.join("; ")
+      rule: "Template-based session generation",
+      value: "#{sessions.size} sessions from KILO templates",
+      decision: sessions.map { |s| "#{s[:day]}: #{s[:template_name]} (#{s[:exercises].size} exercises)" }.join("; ")
     )
 
     result
@@ -63,73 +75,86 @@ class Kilo::SessionGenerator
 
   private
 
-  # Builds exercise list for a single session based on session type.
-  # Uses KILO exercise database and 90-degree pairing rules.
-  def build_exercises_for_session(session_type:, rep_scheme:, intensity_pct:,
-                                   limiting_upper:, limiting_lower:)
-    exercises = []
-    positions = %w[A1 A2 B1 B2 C1 C2]
+  # Resolves generic session types (upper_body_1) to specific templates
+  # (overhead_press) using the microcycle structure
+  def resolve_session_type(session_type, microcycle_structure)
+    return session_type if Kilo::SessionTemplates.for(session_type)
+    return session_type unless microcycle_structure
 
-    # Determine which body region this session targets
-    is_upper = session_type.include?("upper")
-    is_lower = session_type.include?("lower")
-    is_full = session_type.include?("full")
+    microcycle_structure[session_type.to_sym] || microcycle_structure[session_type.to_s] || session_type
+  end
 
-    # Parse rep scheme (e.g., "5x7" → 5 sets of 7 reps)
-    sets, reps = parse_rep_scheme(rep_scheme)
+  def build_from_template(template:, rep_scheme:, intensity_pct:, overrides:, movement_result:)
+    a_sets, a_reps = parse_rep_scheme(rep_scheme)
 
-    # Select exercises from the database based on session type
-    # For now, use whatever exercises exist in the database
-    # The 90-degree principle and MAP-based selection will be applied
-    # when the exercise database is fully seeded
-    available = if is_upper
-      KiloExercise.where("category LIKE ?", "%upper%").or(KiloExercise.where("category LIKE ?", "%press%")).or(KiloExercise.where("category LIKE ?", "%pull%"))
-    elsif is_lower
-      KiloExercise.where("category LIKE ?", "%lower%").or(KiloExercise.where("category LIKE ?", "%squat%")).or(KiloExercise.where("category LIKE ?", "%hip%"))
-    else
-      KiloExercise.all
-    end
+    template[:slots].map do |slot|
+      exercise_name = overrides[slot[:position]] || slot[:default_exercise]
 
-    # Build exercise slots with positions
-    available.limit(6).each_with_index do |exercise, i|
-      position = positions[i] || "D#{i - 5}"
-
-      # Determine tempo based on position (A-pair heavier, C-pair lighter)
-      tempo = case position[0]
-      when "A" then "4010"
-      when "B" then "3110"
-      when "C" then "3010"
-      else "3010"
+      # Apply MAP progression if available
+      if movement_result&.complete? && slot[:category]&.start_with?("primary_")
+        progression = map_progression_for(slot[:category], movement_result)
+        exercise_name = progression if progression
       end
 
-      # Rest periods decrease from A to C pairs
-      rest = case position[0]
-      when "A" then 90
-      when "B" then 75
-      when "C" then 60
-      else 60
-      end
+      # A-series uses periodization model rep scheme, B/C use template defaults
+      is_a_series = slot[:position].start_with?("A")
+      sets = is_a_series && a_sets ? a_sets : parse_set_range(slot[:sets])
+      reps = is_a_series && a_reps ? a_reps : slot[:reps]
 
-      exercises << {
-        position: position,
-        kilo_exercise_id: exercise.id,
-        exercise_name: exercise.name,
-        sets: sets || 4,
-        target_reps: reps || 8,
-        tempo: tempo,
-        rest_seconds: rest
+      # Find the exercise in the database (or use the name as-is)
+      kilo_exercise = KiloExercise.find_by("name ILIKE ?", "%#{exercise_name.split('(').first.strip}%")
+
+      {
+        position: slot[:position],
+        category: slot[:category],
+        exercise_name: exercise_name,
+        kilo_exercise_id: kilo_exercise&.id,
+        sets: sets,
+        target_reps: reps.to_s,
+        tempo: slot[:tempo],
+        rest_seconds: slot[:rest]
       }
     end
+  end
 
-    exercises
+  # Checks MAP results for movement restrictions and returns appropriate
+  # exercise progression. Returns nil if no MAP override needed.
+  def map_progression_for(category, movement_result)
+    return nil unless movement_result&.levels
+
+    case category
+    when "primary_squat"
+      squat_data = movement_result.levels["squat"]
+      if squat_data && squat_data[:level].to_i < 3
+        "Goblet Squat" # MAP progression for failed squat levels
+      end
+    when "primary_front_squat"
+      squat_data = movement_result.levels["squat"]
+      if squat_data && squat_data[:level].to_i < 2
+        "Goblet Squat"
+      end
+    when "primary_deadlift"
+      dl_data = movement_result.levels["deadlift"]
+      if dl_data && dl_data[:level].to_i < 2
+        "Romanian Deadlift"
+      end
+    end
   end
 
   def parse_rep_scheme(rep_scheme)
-    return [4, 8] unless rep_scheme.present?
+    return [nil, nil] unless rep_scheme.present?
 
-    match = rep_scheme.match(/(\d+)x(\d+)/)
-    return [4, 8] unless match
+    if match = rep_scheme.match(/^(\d+)x(\d+)$/)
+      [match[1].to_i, match[2].to_i]
+    else
+      # Complex rep scheme like "12,10,8,6" - use the count as sets
+      parts = rep_scheme.split(",").map(&:strip)
+      [parts.size, rep_scheme]
+    end
+  end
 
-    [match[1].to_i, match[2].to_i]
+  def parse_set_range(range)
+    # "3-4" -> use the lower end as default
+    range.to_s.split("-").first.to_i
   end
 end
