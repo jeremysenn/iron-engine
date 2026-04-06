@@ -12,6 +12,9 @@ class ProgramsController < ApplicationController
   def create
     assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
 
+    acc_structure = Kilo::MicrocycleStructures.from_params(params[:acc_structure])
+    int_structure = Kilo::MicrocycleStructures.from_params(params[:int_structure])
+
     generator = Kilo::ProgramGenerator.new
     @program = generator.call(
       client: @client,
@@ -19,8 +22,8 @@ class ProgramsController < ApplicationController
       goal: params[:goal],
       volume: params[:volume],
       frequency: params[:frequency].to_i,
-      acc_microcycle: params[:acc_microcycle] || "1",
-      int_microcycle: params[:int_microcycle] || "2",
+      acc_structure: acc_structure,
+      int_structure: int_structure,
       map_assessment: @client.map_assessments.order(assessed_at: :desc).first
     )
 

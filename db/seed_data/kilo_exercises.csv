@@ -17,7 +17,15 @@ Pull-Up,upper_pull,bodyweight,pronated,,1,pull_vertical
 Barbell Row,upper_pull,barbell,pronated,medium,1,pull_horizontal
 Seated Cable Row,upper_pull,cable,neutral,,2,pull_horizontal
 Face Pull,upper_pull,cable,pronated,,3,pull_horizontal
-Lat Pulldown,upper_pull,cable,pronated,wide,2,pull_vertical
+Pulldown - Close Grip - Semi-Supinated,upper_pull,cable,semi_supinated,close,2,pull_vertical
+Pulldown - Close Grip - Neutral,upper_pull,cable,neutral,close,2,pull_vertical
+Pulldown - Close Grip - Semi-Pronated,upper_pull,cable,semi_pronated,close,2,pull_vertical
+Pulldown - Medium Grip - Semi-Supinated,upper_pull,cable,semi_supinated,medium,2,pull_vertical
+Pulldown - Medium Grip - Neutral,upper_pull,cable,neutral,medium,2,pull_vertical
+Pulldown - Medium Grip - Semi-Pronated,upper_pull,cable,semi_pronated,medium,2,pull_vertical
+Pulldown - Wide Grip - Semi-Supinated,upper_pull,cable,semi_supinated,wide,2,pull_vertical
+Pulldown - Wide Grip - Neutral,upper_pull,cable,neutral,wide,2,pull_vertical
+Pulldown - Wide Grip - Semi-Pronated,upper_pull,cable,semi_pronated,wide,2,pull_vertical
 DB Row,upper_pull,dumbbell,neutral,,2,pull_horizontal
 Split Squat,lower_quad,dumbbell,,,3,
 Leg Press,lower_quad,machine,,,3,

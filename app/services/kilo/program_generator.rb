@@ -37,12 +37,14 @@ class Kilo::ProgramGenerator
   # @param goal [String] hypertrophy/absolute_strength/relative_strength/power
   # @param volume [String] low/medium/high
   # @param frequency [Integer] 2/3/4/5
-  # @param acc_microcycle [String] "1" or "2" - microcycle structure for accumulation phases
-  # @param int_microcycle [String] "1" or "2" - microcycle structure for intensification phases
+  # @param acc_structure [Hash] per-slot session types for accumulation phases
+  # @param int_structure [Hash] per-slot session types for intensification phases
   # @param map_assessment [MapAssessment, nil] optional MAP for exercise personalization
-  def call(client:, assessment:, goal:, volume:, frequency:, acc_microcycle: "1", int_microcycle: "2", map_assessment: nil)
-    @acc_structure = Kilo::MicrocycleStructures.for(acc_microcycle)
-    @int_structure = Kilo::MicrocycleStructures.for(int_microcycle)
+  def call(client:, assessment:, goal:, volume:, frequency:,
+           acc_structure: nil, int_structure: nil, map_assessment: nil,
+           **_ignored)
+    @acc_structure = acc_structure || Kilo::MicrocycleStructures::DEFAULT_ACC
+    @int_structure = int_structure || Kilo::MicrocycleStructures::DEFAULT_INT
     annotations = []
 
     # Step 1: MAP assessment (optional)

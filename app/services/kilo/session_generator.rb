@@ -91,8 +91,8 @@ class Kilo::SessionGenerator
       exercise_name = overrides[slot[:position]] || slot[:default_exercise]
 
       # Apply MAP progression if available
-      if movement_result&.complete? && slot[:category]&.start_with?("primary_")
-        progression = map_progression_for(slot[:category], movement_result)
+      if movement_result&.complete?
+        progression = map_progression_for(slot[:category], slot[:default_exercise], movement_result)
         exercise_name = progression if progression
       end
 
@@ -119,24 +119,54 @@ class Kilo::SessionGenerator
 
   # Checks MAP results for movement restrictions and returns appropriate
   # exercise progression. Returns nil if no MAP override needed.
-  def map_progression_for(category, movement_result)
+  #
+  # Key substitutions:
+  #   Chin-Up fail → Lat Pulldown with matching grip
+  #   Dip fail     → Push-Up progression
+  #   Squat fail   → Goblet Squat (MAP level dependent)
+  #   Deadlift fail → Romanian Deadlift
+  #
+  def map_progression_for(category, default_exercise, movement_result)
     return nil unless movement_result&.levels
 
     case category
     when "primary_squat"
       squat_data = movement_result.levels["squat"]
       if squat_data && squat_data[:level].to_i < 3
-        "Goblet Squat" # MAP progression for failed squat levels
+        "Goblet Squat"
       end
+
     when "primary_front_squat"
       squat_data = movement_result.levels["squat"]
       if squat_data && squat_data[:level].to_i < 2
         "Goblet Squat"
       end
+
     when "primary_deadlift"
       dl_data = movement_result.levels["deadlift"]
       if dl_data && dl_data[:level].to_i < 2
         "Romanian Deadlift"
+      end
+
+    when "primary_pull"
+      # Chin-Up / Pull-Up → Pulldown with matching grip (KILO Exercise Database names)
+      chin_data = movement_result.levels["chin_up"]
+      if chin_data && !chin_data[:passed]
+        case default_exercise
+        when /Semi-Supinated/i then "Pulldown - Close Grip - Semi-Supinated"
+        when /Supinating/i     then "Pulldown - Close Grip - Semi-Supinated"
+        when /Pronated/i       then "Pulldown - Medium Grip - Semi-Pronated"
+        when /Pull-Up/i        then "Pulldown - Medium Grip - Semi-Pronated"
+        when /Neutral/i        then "Pulldown - Medium Grip - Neutral"
+        else "Pulldown - Medium Grip - Neutral"
+        end
+      end
+
+    when "primary_press"
+      # Dip → Push-Up progression if dip MAP failed
+      dip_data = movement_result.levels["dip"]
+      if dip_data && !dip_data[:passed] && default_exercise =~ /Dip/i
+        "Push-Up"
       end
     end
   end

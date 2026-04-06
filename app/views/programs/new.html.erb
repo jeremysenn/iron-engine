@@ -16,55 +16,126 @@
   </div>
 <% end %>
 
-<%= form_with url: client_programs_path(@client), method: :post, class: "max-w-lg space-y-5" do |f| %>
-  <div>
-    <label class="block text-sm font-medium text-slate-500 mb-1">Goal</label>
-    <select name="goal" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-      <option value="">Select goal</option>
-      <option value="balanced">Balanced</option>
-      <option value="hypertrophy">Hypertrophy</option>
-      <option value="absolute_strength">Absolute Strength</option>
-      <option value="relative_strength">Relative Strength</option>
-      <option value="power">Power</option>
-    </select>
+<% select_class = "w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1" %>
+
+<%= form_with url: client_programs_path(@client), method: :post, class: "max-w-2xl space-y-5" do |f| %>
+  <div class="grid grid-cols-3 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-slate-500 mb-1">Goal</label>
+      <select name="goal" required class="<%= select_class %>">
+        <option value="">Select goal</option>
+        <option value="balanced">Balanced</option>
+        <option value="hypertrophy">Hypertrophy</option>
+        <option value="absolute_strength">Absolute Strength</option>
+        <option value="relative_strength">Relative Strength</option>
+        <option value="power">Power</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-500 mb-1">Volume Tolerance</label>
+      <select name="volume" required class="<%= select_class %>">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-slate-500 mb-1">Frequency</label>
+      <select name="frequency" required class="<%= select_class %>">
+        <option value="2">2x / week</option>
+        <option value="3">3x / week</option>
+        <option value="4" selected>4x / week</option>
+        <option value="5">5x / week</option>
+      </select>
+    </div>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium text-slate-500 mb-1">Volume Tolerance</label>
-    <select name="volume" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-      <option value="">Select volume</option>
-      <option value="low">Low</option>
-      <option value="medium" selected>Medium</option>
-      <option value="high">High</option>
-    </select>
+  <%# Accumulation Microcycle - per slot selection %>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded-sm bg-teal-600"></span>
+      Accumulation Microcycle
+    </h3>
+    <p class="text-xs text-slate-400 mb-3">Select the session type for each training slot during accumulation phases.</p>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 1</label>
+        <select name="acc_structure[upper_body_1]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'overhead_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 1</label>
+        <select name="acc_structure[lower_body_1]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'squat_1' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 2</label>
+        <select name="acc_structure[upper_body_2]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'bench_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 2</label>
+        <select name="acc_structure[lower_body_2]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'front_squat' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium text-slate-500 mb-1">Frequency (days/week)</label>
-    <select name="frequency" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-      <option value="2">2x / week</option>
-      <option value="3">3x / week</option>
-      <option value="4" selected>4x / week</option>
-      <option value="5">5x / week</option>
-    </select>
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium text-slate-500 mb-1">Accumulation Microcycle Structure</label>
-    <select name="acc_microcycle" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-      <option value="1" selected>Structure 1: OH Press / Squat 1 / Bench Press / Front Squat</option>
-      <option value="2">Structure 2: Incline Press / Squat 2 / Dip / Deadlift</option>
-    </select>
-    <p class="text-xs text-slate-400 mt-1">UB1 / LB1 / UB2 / LB2 session types for accumulation weeks</p>
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium text-slate-500 mb-1">Intensification Microcycle Structure</label>
-    <select name="int_microcycle" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-      <option value="1">Structure 1: OH Press / Squat 1 / Bench Press / Front Squat</option>
-      <option value="2" selected>Structure 2: Incline Press / Squat 2 / Dip / Deadlift</option>
-    </select>
-    <p class="text-xs text-slate-400 mt-1">UB1 / LB1 / UB2 / LB2 session types for intensification weeks</p>
+  <%# Intensification Microcycle - per slot selection %>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
+      <span class="inline-block w-3 h-3 rounded-sm bg-amber-600"></span>
+      Intensification Microcycle
+    </h3>
+    <p class="text-xs text-slate-400 mb-3">Select the session type for each training slot during intensification phases.</p>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 1</label>
+        <select name="int_structure[upper_body_1]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'incline_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 1</label>
+        <select name="int_structure[lower_body_1]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'squat_2' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 2</label>
+        <select name="int_structure[upper_body_2]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'dip' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 2</label>
+        <select name="int_structure[lower_body_2]" class="<%= select_class %>">
+          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
+            <option value="<%= opt %>" <%= 'selected' if opt == 'deadlift' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
+          <% end %>
+        </select>
+      </div>
+    </div>
   </div>
 
   <div class="flex items-center gap-3 pt-4">
