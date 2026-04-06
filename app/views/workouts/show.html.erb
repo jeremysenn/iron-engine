@@ -9,18 +9,41 @@
 
 <%= form_with url: client_workout_path(@client, @session), method: :patch, class: "space-y-6" do |f| %>
   <% @exercises.each do |se| %>
-    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
-      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
-          <% if se.kilo_exercise_id %>
-            <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "font-medium text-sm text-slate-700 hover:text-teal-600" %>
-          <% else %>
-            <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
-          <% end %>
+    <div class="exercise-card bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
+            <% if se.kilo_exercise_id %>
+              <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "font-medium text-sm text-slate-700 hover:text-teal-600" %>
+            <% else %>
+              <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+            <% end %>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= se.tempo %> · <%= se.rest_seconds %>s</span>
+            <button onclick="this.closest('.exercise-card').querySelector('.swap-panel').classList.toggle('hidden')"
+                    class="text-xs text-teal-600 hover:text-teal-700 font-medium">Swap</button>
+          </div>
         </div>
-        <div class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]">
-          <%= se.tempo %> · <%= se.rest_seconds %>s rest
+        <%# Exercise swap panel (hidden by default) %>
+        <div class="swap-panel hidden mt-3 pt-3 border-t border-slate-200">
+          <%= form_with url: client_session_exercise_path(@client, se), method: :patch, class: "flex items-end gap-2" do %>
+            <div class="flex-1">
+              <label class="block text-xs text-slate-400 mb-1">Replace with</label>
+              <select name="kilo_exercise_id" class="w-full px-2 py-1.5 rounded border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+                <option value="">— Select exercise —</option>
+                <% KiloExercise.available_for(Current.user).order(:category, :name).group_by(&:category).each do |cat, exercises| %>
+                  <optgroup label="<%= cat.titleize %>">
+                    <% exercises.each do |ex| %>
+                      <option value="<%= ex.id %>" <%= 'selected' if ex.id == se.kilo_exercise_id %>><%= ex.name %></option>
+                    <% end %>
+                  </optgroup>
+                <% end %>
+              </select>
+            </div>
+            <button type="submit" class="px-3 py-1.5 rounded text-xs font-medium text-white bg-teal-600 hover:bg-teal-700">Save</button>
+          <% end %>
         </div>
       </div>
 

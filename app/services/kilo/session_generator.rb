@@ -101,8 +101,10 @@ class Kilo::SessionGenerator
       sets = is_a_series && a_sets ? a_sets : parse_set_range(slot[:sets])
       reps = is_a_series && a_reps ? a_reps : slot[:reps]
 
-      # Find the exercise in the database (or use the name as-is)
-      kilo_exercise = KiloExercise.find_by("name ILIKE ?", "%#{exercise_name.split('(').first.strip}%")
+      # Find the exercise in the database: try exact match, then partial
+      kilo_exercise = KiloExercise.find_by(name: exercise_name) ||
+                      KiloExercise.where("name ILIKE ?", exercise_name).first ||
+                      KiloExercise.where("name ILIKE ?", "#{exercise_name.split(' - ').first}%").first
 
       {
         position: slot[:position],

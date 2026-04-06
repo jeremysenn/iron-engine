@@ -1,5 +1,6 @@
 <%= page_header @client.full_name do %>
   <div class="flex items-center gap-3">
+    <%= btn_secondary "Edit Program", edit_client_program_path(@client, @program) %>
     <%= btn_secondary "Back to Client", client_path(@client) %>
   </div>
 <% end %>

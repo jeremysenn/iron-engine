@@ -43,11 +43,13 @@ class Kilo::ProgramGenerator
   def call(client:, assessment:, goal:, volume:, frequency:,
            acc_structure: nil, int_structure: nil,
            acc_split: nil, int_split: nil,
+           mesocycle_weeks: nil,
            map_assessment: nil, **_ignored)
     @acc_structure = acc_structure || Kilo::MicrocycleStructures::DEFAULT_ACC
     @int_structure = int_structure || Kilo::MicrocycleStructures::DEFAULT_INT
     @acc_split = acc_split
     @int_split = int_split
+    @mesocycle_weeks = mesocycle_weeks || [3, 3, 3, 3]
     annotations = []
 
     # Step 1: MAP assessment (optional)
@@ -79,7 +81,8 @@ class Kilo::ProgramGenerator
       limiting_lift_upper: ratio_result&.limiting_upper,
       limiting_lift_lower: ratio_result&.limiting_lower,
       goal: goal,
-      model_id: model_result.model_id
+      model_id: model_result.model_id,
+      mesocycle_weeks: @mesocycle_weeks
     )
     annotations.concat(macro_blueprint.annotations)
 

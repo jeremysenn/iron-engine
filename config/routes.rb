@@ -6,12 +6,13 @@ Rails.application.routes.draw do
   resources :clients do
     resources :map_assessments, only: %i[new create show]
     resources :prime_eight_assessments, only: %i[new create show]
-    resources :programs, only: %i[new create show] do
+    resources :programs, only: %i[new create show edit update] do
       collection do
         get :form_options
       end
     end
     resources :workouts, only: %i[show update]
+    resources :session_exercises, only: %i[update]
   end
 
   resources :exercises, only: %i[index show new create edit update]

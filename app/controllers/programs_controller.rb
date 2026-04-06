@@ -31,6 +31,13 @@ class ProgramsController < ApplicationController
     acc_split = params[:acc_split_id].present? ? KiloTrainingSplit.find(params[:acc_split_id]) : nil
     int_split = params[:int_split_id].present? ? KiloTrainingSplit.find(params[:int_split_id]) : nil
 
+    mesocycle_weeks = [
+      (params[:acc1_weeks] || 3).to_i,
+      (params[:int1_weeks] || 3).to_i,
+      (params[:acc2_weeks] || 3).to_i,
+      (params[:int2_weeks] || 3).to_i
+    ]
+
     generator = Kilo::ProgramGenerator.new
     @program = generator.call(
       client: @client,
@@ -42,6 +49,7 @@ class ProgramsController < ApplicationController
       int_structure: int_structure,
       acc_split: acc_split,
       int_split: int_split,
+      mesocycle_weeks: mesocycle_weeks,
       map_assessment: @client.map_assessments.order(assessed_at: :desc).first
     )
 
@@ -61,9 +69,24 @@ class ProgramsController < ApplicationController
     ).order("mesocycles.number", "microcycles.week_number")
   end
 
+  def edit
+  end
+
+  def update
+    if @program.update(program_params)
+      redirect_to client_program_path(@client, @program), notice: "Program updated."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def find_program
     @program = @client.programs.find(params[:id])
+  end
+
+  def program_params
+    params.require(:program).permit(:goal, :volume, :frequency, :status)
   end
 end

@@ -62,6 +62,27 @@
     </div>
   </div>
 
+  <%# Mesocycle lengths per phase %>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Mesocycle Length (weeks per phase)</h3>
+    <p class="text-xs text-slate-400 mb-3">Default is 3 weeks per mesocycle (12 weeks total). Adjust per phase if needed.</p>
+    <div class="grid grid-cols-4 gap-3">
+      <% [["Acc 1", "acc1_weeks", "teal"], ["Int 1", "int1_weeks", "amber"], ["Acc 2", "acc2_weeks", "teal"], ["Int 2", "int2_weeks", "amber"]].each do |label, name, color| %>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+            <span class="inline-block w-2 h-2 rounded-sm bg-<%= color %>-600"></span> <%= label %>
+          </label>
+          <select name="<%= name %>" class="<%= sc %>">
+            <% (1..6).each do |w| %>
+              <option value="<%= w %>" <%= 'selected' if w == 3 %>><%= w %> <%= w == 1 ? 'week' : 'weeks' %></option>
+            <% end %>
+          </select>
+        </div>
+      <% end %>
+    </div>
+    <p class="text-xs text-slate-400 mt-2 font-['JetBrains_Mono',monospace]" id="total-weeks-display">Total: 12 weeks</p>
+  </div>
+
   <% all_opts = Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS + Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS %>
   <% ub_opts = Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS %>
   <% lb_opts = Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS %>
@@ -278,6 +299,19 @@ function updateFormSections() {
   });
 }
 
-// Run on page load
-document.addEventListener('DOMContentLoaded', updateFormSections);
+function updateTotalWeeks() {
+  const weeks = ['acc1_weeks','int1_weeks','acc2_weeks','int2_weeks']
+    .map(n => parseInt(document.querySelector(`[name="${n}"]`)?.value || 3))
+    .reduce((a, b) => a + b, 0);
+  const el = document.getElementById('total-weeks-display');
+  if (el) el.textContent = `Total: ${weeks} weeks`;
+}
+
+// Attach week listeners
+document.addEventListener('DOMContentLoaded', function() {
+  updateFormSections();
+  updateTotalWeeks();
+  document.querySelectorAll('[name$="_weeks"]').forEach(el =>
+    el.addEventListener('change', updateTotalWeeks));
+});
 </script>

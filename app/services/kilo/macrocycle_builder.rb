@@ -32,7 +32,7 @@ class Kilo::MacrocycleBuilder
 
   class TemplateNotFound < StandardError; end
 
-  def call(limiting_lift_upper:, limiting_lift_lower:, goal:, model_id:)
+  def call(limiting_lift_upper:, limiting_lift_lower:, goal:, model_id:, mesocycle_weeks: nil)
     combo = "#{limiting_lift_upper}_#{limiting_lift_lower}"
 
     # Look up macrocycle template for this limiting lift combination
@@ -42,18 +42,25 @@ class Kilo::MacrocycleBuilder
       templates = KiloMacrocycleTemplate.where(limiting_lift_combo: "balanced")
     end
 
-    # Build 4 mesocycles
+    weeks_per_meso = mesocycle_weeks || [3, 3, 3, 3]
+
+    # Build 4 mesocycles with custom week lengths
+    running_week = 0
     mesocycles = PHASE_SEQUENCE.each_with_index.map do |phase_info, index|
       template = templates.find_by(phase: phase_info[:display_phase])
+      meso_weeks = weeks_per_meso[index] || 3
+
+      week_start = running_week + 1
+      running_week += meso_weeks
 
       {
         number: index + 1,
-        phase: phase_info[:display_phase],       # For the Mesocycle model (accumulation/intensification)
-        seed_phase: phase_info[:seed_phase],      # For rep scheme lookup in seed data
+        phase: phase_info[:display_phase],
+        seed_phase: phase_info[:seed_phase],
         label: phase_info[:label],
-        weeks: 3,
-        week_start: (index * 3) + 1,
-        week_end: (index + 1) * 3,
+        weeks: meso_weeks,
+        week_start: week_start,
+        week_end: running_week,
         upper_sessions: template&.upper_sessions,
         lower_sessions: template&.lower_sessions
       }
