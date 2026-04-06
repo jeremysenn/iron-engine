@@ -26,7 +26,7 @@
                 <div class="flex items-center gap-2">
                   <% if (thumb = youtube_thumbnail(exercise.video_url)) %>
                     <%= link_to exercise_path(exercise) do %>
-                      <img src="<%= thumb %>" alt="" class="w-8 h-6 rounded object-cover" loading="lazy">
+                      <img src="<%= thumb %>" alt="" class="w-12 h-9 rounded object-cover" loading="lazy">
                     <% end %>
                   <% end %>
                   <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
