@@ -7,6 +7,64 @@
   <%= %w[Monday Tuesday Wednesday Thursday Friday Saturday Sunday][@session.day] || "Day #{@session.day}" %>
 </div>
 
+<%# Swap exercise forms (outside main form to avoid nesting) %>
+<% @exercises.each do |se| %>
+  <div id="swap-form-<%= se.id %>" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this) this.classList.add('hidden')">
+    <div class="bg-white rounded-lg shadow-lg border border-slate-200 p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
+      <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-1">Swap Exercise</h3>
+      <p class="text-sm text-slate-500 mb-4">Replace <strong><%= se.exercise_name %></strong> (<%= se.position %>) with:</p>
+
+      <%= form_with url: client_session_exercise_path(@client, se), method: :patch do %>
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-slate-400 mb-1">Search exercises</label>
+          <input type="text" id="search-<%= se.id %>" placeholder="Type to filter..."
+                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-2 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1"
+                 oninput="filterExercises(this, 'select-<%= se.id %>')">
+
+          <select name="kilo_exercise_id" id="select-<%= se.id %>" size="10"
+                  class="w-full px-2 py-1 rounded border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+            <% KiloExercise.available_for(Current.user).order(:body_region, :category, :subcategory, :name).group_by { |e|
+                 label = e.body_region.to_s
+                 label += " — #{e.category}" if e.category.present?
+                 label += " — #{e.subcategory}" if e.subcategory.present?
+                 label
+               }.each do |group_label, exercises| %>
+              <optgroup label="<%= group_label %>">
+                <% exercises.each do |ex| %>
+                  <option value="<%= ex.id %>" <%= 'selected' if ex.id == se.kilo_exercise_id %>><%= ex.name %></option>
+                <% end %>
+              </optgroup>
+            <% end %>
+          </select>
+        </div>
+
+        <p class="text-xs text-slate-400 mb-3">Or enter a custom exercise name:</p>
+        <input type="text" name="exercise_name" placeholder="Custom exercise name (leave blank to use selection above)"
+               class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-4 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+
+        <div class="mb-4 bg-slate-50 rounded-md p-3">
+          <label class="block text-xs font-medium text-slate-500 mb-2">Apply change to:</label>
+          <div class="flex gap-4">
+            <label class="flex items-center gap-1.5 text-sm text-slate-600">
+              <input type="radio" name="scope" value="workout" checked class="text-teal-600"> This workout only
+            </label>
+            <label class="flex items-center gap-1.5 text-sm text-slate-600">
+              <input type="radio" name="scope" value="mesocycle" class="text-teal-600"> Entire mesocycle
+            </label>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">Mesocycle: updates all weeks in this phase with the same session type</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">Save</button>
+          <button type="button" onclick="this.closest('[id^=swap-form]').classList.add('hidden')" class="text-sm text-slate-500 hover:text-slate-700">Cancel</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<%# Main workout logging form %>
 <%= form_with url: client_workout_path(@client, @session), method: :patch, class: "space-y-6" do |f| %>
   <% @exercises.each do |se| %>
     <div class="exercise-card bg-white rounded-lg border border-slate-200 overflow-hidden">
@@ -22,28 +80,9 @@
           </div>
           <div class="flex items-center gap-3">
             <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= se.tempo %> · <%= se.rest_seconds %>s</span>
-            <button onclick="this.closest('.exercise-card').querySelector('.swap-panel').classList.toggle('hidden')"
+            <button type="button" onclick="document.getElementById('swap-form-<%= se.id %>').classList.remove('hidden')"
                     class="text-xs text-teal-600 hover:text-teal-700 font-medium">Swap</button>
           </div>
-        </div>
-        <%# Exercise swap panel (hidden by default) %>
-        <div class="swap-panel hidden mt-3 pt-3 border-t border-slate-200">
-          <%= form_with url: client_session_exercise_path(@client, se), method: :patch, class: "flex items-end gap-2" do %>
-            <div class="flex-1">
-              <label class="block text-xs text-slate-400 mb-1">Replace with</label>
-              <select name="kilo_exercise_id" class="w-full px-2 py-1.5 rounded border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-                <option value="">— Select exercise —</option>
-                <% KiloExercise.available_for(Current.user).order(:body_region, :category, :subcategory, :name).group_by { |e| "#{e.body_region} — #{e.category}#{e.subcategory.present? ? " (#{e.subcategory})" : ""}" }.each do |group_label, exercises| %>
-                  <optgroup label="<%= group_label %>">
-                    <% exercises.each do |ex| %>
-                      <option value="<%= ex.id %>" <%= 'selected' if ex.id == se.kilo_exercise_id %>><%= ex.name %></option>
-                    <% end %>
-                  </optgroup>
-                <% end %>
-              </select>
-            </div>
-            <button type="submit" class="px-3 py-1.5 rounded text-xs font-medium text-white bg-teal-600 hover:bg-teal-700">Save</button>
-          <% end %>
         </div>
       </div>
 
@@ -59,12 +98,8 @@
         <tbody>
           <% se.exercise_sets.order(:set_number).each do |set| %>
             <tr class="border-b border-slate-50">
-              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-sm text-slate-400">
-                <%= set.set_number %>
-              </td>
-              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-xs text-slate-400">
-                <%= set.target_reps %> reps
-              </td>
+              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-sm text-slate-400"><%= set.set_number %></td>
+              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= set.target_reps %> reps</td>
               <td class="text-center py-2 px-2">
                 <input type="number" step="0.5" min="0"
                        name="sets[<%= set.id %>][actual_weight]"
@@ -91,3 +126,22 @@
     <%= link_to "Cancel", client_program_path(@client, @program), class: "text-sm text-slate-500 hover:text-slate-700" %>
   </div>
 <% end %>
+
+<script>
+function filterExercises(input, selectId) {
+  const filter = input.value.toLowerCase();
+  const select = document.getElementById(selectId);
+  const groups = select.querySelectorAll('optgroup');
+
+  groups.forEach(group => {
+    let visibleCount = 0;
+    group.querySelectorAll('option').forEach(opt => {
+      const match = opt.textContent.toLowerCase().includes(filter) ||
+                    group.label.toLowerCase().includes(filter);
+      opt.style.display = match ? '' : 'none';
+      if (match) visibleCount++;
+    });
+    group.style.display = visibleCount > 0 ? '' : 'none';
+  });
+}
+</script>
