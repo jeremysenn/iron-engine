@@ -6,13 +6,11 @@
   <p class="text-sm text-slate-500 mb-6">
     Generate a 12-week program based on <strong><%= @client.full_name %></strong>'s
     PrimeEight assessment and training age (<%= @client.training_age %>).
-    Limiting lifts will determine exercise prioritization.
   </p>
 <% else %>
   <div class="mb-6 px-4 py-3 rounded-md border-l-3 border-amber-500 bg-amber-50 text-amber-800 text-sm">
-    No PrimeEight assessment found. The program will use a <strong>balanced</strong> macrocycle template
-    without limiting lift prioritization. For personalized exercise selection,
-    <%= link_to "run an assessment first", new_client_prime_eight_assessment_path(@client), class: "underline font-medium" %>.
+    No PrimeEight assessment found. The program will use a <strong>balanced</strong> macrocycle template.
+    <%= link_to "Run an assessment first", new_client_prime_eight_assessment_path(@client), class: "underline font-medium" %>.
   </div>
 <% end %>
 
@@ -43,142 +41,36 @@
 
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Frequency</label>
-      <select name="frequency" required class="<%= select_class %>">
-        <option value="2">2x / week</option>
-        <option value="3">3x / week</option>
-        <option value="4" selected>4x / week</option>
-        <option value="5">5x / week</option>
+      <select name="frequency" required class="<%= select_class %>"
+              data-action="change->dynamic-form#reload"
+              data-dynamic-form-url-value="<%= form_options_client_programs_path(@client) %>"
+              id="frequency-select">
+        <option value="2" <%= 'selected' if @frequency == 2 %>>2x / week (Full Body)</option>
+        <option value="3" <%= 'selected' if @frequency == 3 %>>3x / week</option>
+        <option value="4" <%= 'selected' if @frequency == 4 %>>4x / week (Upper/Lower)</option>
+        <option value="5" <%= 'selected' if @frequency == 5 %>>5x / week (Body Part)</option>
       </select>
     </div>
   </div>
 
-  <%# Training Split Selection %>
-  <% if @training_splits.any? %>
-    <div class="bg-white rounded-lg border border-slate-200 p-4">
-      <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3">Training Split</h3>
-      <p class="text-xs text-slate-400 mb-3">Select a training split or leave as default (Upper/Lower 4x). The split determines which body parts are trained on which days.</p>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Accumulation Split</label>
-          <select name="acc_split_id" class="<%= select_class %>">
-            <option value="">Default (Upper/Lower)</option>
-            <% KiloTrainingSplit.where(phase: :accumulation).order(:goal, :training_level).each do |split| %>
-              <option value="<%= split.id %>">
-                <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
-                <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
-                <% days = struct.values.uniq.reject { |v| v == "OFF" } %>
-                (<%= days.map(&:titleize).join(", ") %>)
-              </option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Intensification Split</label>
-          <select name="int_split_id" class="<%= select_class %>">
-            <option value="">Default (Upper/Lower)</option>
-            <% KiloTrainingSplit.where(phase: :intensification).order(:goal, :training_level).each do |split| %>
-              <option value="<%= split.id %>">
-                <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
-                <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
-                <% days = struct.values.uniq.reject { |v| v == "OFF" } %>
-                (<%= days.map(&:titleize).join(", ") %>)
-              </option>
-            <% end %>
-          </select>
-        </div>
-      </div>
-    </div>
+  <%# Dynamic section: reloads when frequency changes %>
+  <%= turbo_frame_tag "program_options", src: form_options_client_programs_path(@client, frequency: @frequency, goal: params[:goal]) do %>
+    <div class="text-center py-8 text-slate-400 text-sm">Loading options...</div>
   <% end %>
-
-  <%# Accumulation Microcycle - per slot selection %>
-  <div class="bg-white rounded-lg border border-slate-200 p-4">
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded-sm bg-teal-600"></span>
-      Accumulation Microcycle
-    </h3>
-    <p class="text-xs text-slate-400 mb-3">Select the session type for each training slot during accumulation phases.</p>
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 1</label>
-        <select name="acc_structure[upper_body_1]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'overhead_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 1</label>
-        <select name="acc_structure[lower_body_1]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'squat_1' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 2</label>
-        <select name="acc_structure[upper_body_2]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'bench_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 2</label>
-        <select name="acc_structure[lower_body_2]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'front_squat' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-    </div>
-  </div>
-
-  <%# Intensification Microcycle - per slot selection %>
-  <div class="bg-white rounded-lg border border-slate-200 p-4">
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded-sm bg-amber-600"></span>
-      Intensification Microcycle
-    </h3>
-    <p class="text-xs text-slate-400 mb-3">Select the session type for each training slot during intensification phases.</p>
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 1</label>
-        <select name="int_structure[upper_body_1]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'incline_press' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 1</label>
-        <select name="int_structure[lower_body_1]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'squat_2' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Upper Body 2</label>
-        <select name="int_structure[upper_body_2]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'dip' %>><%= Kilo::MicrocycleStructures.upper_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1">Lower Body 2</label>
-        <select name="int_structure[lower_body_2]" class="<%= select_class %>">
-          <% Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS.each do |opt| %>
-            <option value="<%= opt %>" <%= 'selected' if opt == 'deadlift' %>><%= Kilo::MicrocycleStructures.lower_body_label(opt) %></option>
-          <% end %>
-        </select>
-      </div>
-    </div>
-  </div>
 
   <div class="flex items-center gap-3 pt-4">
     <input type="submit" value="Generate Program" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors" data-turbo-submits-with="Generating...">
     <%= link_to "Cancel", client_path(@client), class: "text-sm text-slate-500 hover:text-slate-700" %>
   </div>
 <% end %>
+
+<%# Stimulus controller to reload Turbo Frame when frequency changes %>
+<script>
+  document.addEventListener("change", function(e) {
+    if (e.target.id === "frequency-select") {
+      const frame = document.querySelector("turbo-frame#program_options");
+      const baseUrl = "<%= form_options_client_programs_path(@client) %>";
+      frame.src = baseUrl + "?frequency=" + e.target.value;
+    }
+  });
+</script>

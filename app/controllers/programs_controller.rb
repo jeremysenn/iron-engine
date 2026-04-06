@@ -7,7 +7,18 @@ class ProgramsController < ApplicationController
   def new
     @assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
     @has_assessment = @assessment&.prime_eight_lifts&.any?
-    @training_splits = KiloTrainingSplit.all.group_by { |s| "#{s.goal}_#{s.phase}" }
+    @frequency = (params[:frequency] || 4).to_i
+    @training_level = @client.training_age
+  end
+
+  # Turbo Frame endpoint: returns microcycle/split options for selected frequency
+  def form_options
+    @frequency = (params[:frequency] || 4).to_i
+    @training_level = @client.training_age
+    @goal = params[:goal]
+    render partial: "programs/form_options", locals: {
+      frequency: @frequency, training_level: @training_level, goal: @goal
+    }
   end
 
   def create

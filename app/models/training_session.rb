@@ -9,7 +9,10 @@ class TrainingSession < ApplicationRecord
     full_body: 4,
     overhead_press: 5, incline_press: 6, bench_press: 7, dip: 8,
     squat_1: 9, squat_2: 10, front_squat: 11, deadlift: 12,
-    arms_and_shoulders: 13, chest_and_back: 14, lower_body: 15, posterior_chain: 16
+    arms_and_shoulders: 13, chest_and_back: 14, lower_body: 15, posterior_chain: 16,
+    squat_1_overhead_press: 17, front_squat_incline_press: 18,
+    squat_2_bench_press: 19, deadlift_dip: 20,
+    full_body_1: 21, full_body_2: 22
   }
 
   validates :day, presence: true

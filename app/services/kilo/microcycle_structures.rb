@@ -1,53 +1,96 @@
 # Microcycle structures define which session template is assigned to each
-# training slot within a weekly microcycle.
+# training slot. The available structures depend on the training frequency.
 #
-# For 4x/week (Upper/Lower split):
-#   4 slots: UB1, LB1, UB2, LB2
-#   Each slot independently selectable from the 8 session types
-#
-# For 3x/week (Upper/Lower/Upper or Lower/Upper/Lower):
-#   3 slots per week, rotating through 4 microcycle structures
-#
-# Defaults from Program Design Resource p.8:
-#   Accumulation:     UB1=Overhead Press, LB1=Squat 1, UB2=Bench Press, LB2=Front Squat
-#   Intensification:  UB1=Incline Press, LB1=Squat 2, UB2=Dip, LB2=Deadlift
+# From the KILO Program Design Resource:
+#   2x/week (Full Body): 2 structures rotating, each with FB1 + FB2
+#   3x/week: 4 structures rotating, each session = one UB or LB type
+#   4x/week (Upper/Lower): 2 structures, UB1/LB1/UB2/LB2
 #
 module Kilo::MicrocycleStructures
   UPPER_BODY_OPTIONS = %w[overhead_press incline_press bench_press dip].freeze
   LOWER_BODY_OPTIONS = %w[squat_1 squat_2 front_squat deadlift].freeze
 
-  DEFAULT_ACC = {
+  FULL_BODY_OPTIONS = %w[
+    squat_1_overhead_press front_squat_incline_press
+    squat_2_bench_press deadlift_dip
+  ].freeze
+
+  # 4x/week defaults (PD Resource p.8)
+  DEFAULT_ACC_4X = {
     "upper_body_1" => "overhead_press",
     "lower_body_1" => "squat_1",
     "upper_body_2" => "bench_press",
     "lower_body_2" => "front_squat"
   }.freeze
 
-  DEFAULT_INT = {
+  DEFAULT_INT_4X = {
     "upper_body_1" => "incline_press",
     "lower_body_1" => "squat_2",
     "upper_body_2" => "dip",
     "lower_body_2" => "deadlift"
   }.freeze
 
-  # Build a structure hash from per-slot params
-  # @param params [Hash] { "upper_body_1" => "overhead_press", "lower_body_1" => "squat_1", ... }
+  # 2x/week defaults (PD Resource p.11)
+  DEFAULT_ACC_2X = {
+    "full_body_1" => "squat_1_overhead_press",
+    "full_body_2" => "front_squat_incline_press"
+  }.freeze
+
+  DEFAULT_INT_2X = {
+    "full_body_1" => "squat_2_bench_press",
+    "full_body_2" => "deadlift_dip"
+  }.freeze
+
+  # 3x/week defaults - same session types as 4x but 3 sessions per week
+  # Structure 1 (same UB+LB pair all 3 sessions)
+  DEFAULT_ACC_3X = {
+    "session_1" => "overhead_press",
+    "session_2" => "squat_1",
+    "session_3" => "overhead_press"
+  }.freeze
+
+  DEFAULT_INT_3X = {
+    "session_1" => "incline_press",
+    "session_2" => "front_squat",
+    "session_3" => "incline_press"
+  }.freeze
+
+  # Aliases for backward compatibility
+  DEFAULT_ACC = DEFAULT_ACC_4X
+  DEFAULT_INT = DEFAULT_INT_4X
+
   def self.from_params(params)
-    return DEFAULT_ACC unless params.is_a?(Hash)
-    params.to_h.stringify_keys
+    return nil unless params.is_a?(Hash) || params.is_a?(ActionController::Parameters)
+    params.to_unsafe_h.stringify_keys
   end
 
-  def self.defaults_for(phase)
-    phase.to_s.include?("intensification") ? DEFAULT_INT : DEFAULT_ACC
+  def self.defaults_for(phase, frequency = 4)
+    is_acc = !phase.to_s.include?("intensification")
+    case frequency.to_i
+    when 2
+      is_acc ? DEFAULT_ACC_2X : DEFAULT_INT_2X
+    when 3
+      is_acc ? DEFAULT_ACC_3X : DEFAULT_INT_3X
+    else
+      is_acc ? DEFAULT_ACC_4X : DEFAULT_INT_4X
+    end
   end
 
-  def self.upper_body_label(key)
-    { "overhead_press" => "Overhead Press", "incline_press" => "Incline Press",
-      "bench_press" => "Bench Press", "dip" => "Dip" }[key.to_s] || key.to_s.titleize
+  def self.label_for(key)
+    labels = {
+      "overhead_press" => "Overhead Press", "incline_press" => "Incline Press",
+      "bench_press" => "Bench Press", "dip" => "Dip",
+      "squat_1" => "Squat 1", "squat_2" => "Squat 2",
+      "front_squat" => "Front Squat", "deadlift" => "Deadlift",
+      "squat_1_overhead_press" => "Squat 1 & OH Press",
+      "front_squat_incline_press" => "Front Squat & Incline Press",
+      "squat_2_bench_press" => "Squat 2 & Bench Press",
+      "deadlift_dip" => "Deadlift & Dip"
+    }
+    labels[key.to_s] || key.to_s.titleize
   end
 
-  def self.lower_body_label(key)
-    { "squat_1" => "Squat 1", "squat_2" => "Squat 2",
-      "front_squat" => "Front Squat", "deadlift" => "Deadlift" }[key.to_s] || key.to_s.titleize
-  end
+  # Keep backward compat
+  def self.upper_body_label(key) = label_for(key)
+  def self.lower_body_label(key) = label_for(key)
 end
