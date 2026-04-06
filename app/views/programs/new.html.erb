@@ -66,7 +66,8 @@
             <% KiloTrainingSplit.where(phase: :accumulation).order(:goal, :training_level).each do |split| %>
               <option value="<%= split.id %>">
                 <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
-                <% days = split.split_structure.values.uniq.reject { |v| v == "OFF" } %>
+                <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
+                <% days = struct.values.uniq.reject { |v| v == "OFF" } %>
                 (<%= days.map(&:titleize).join(", ") %>)
               </option>
             <% end %>
@@ -79,7 +80,8 @@
             <% KiloTrainingSplit.where(phase: :intensification).order(:goal, :training_level).each do |split| %>
               <option value="<%= split.id %>">
                 <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
-                <% days = split.split_structure.values.uniq.reject { |v| v == "OFF" } %>
+                <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
+                <% days = struct.values.uniq.reject { |v| v == "OFF" } %>
                 (<%= days.map(&:titleize).join(", ") %>)
               </option>
             <% end %>
