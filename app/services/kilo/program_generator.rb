@@ -41,10 +41,13 @@ class Kilo::ProgramGenerator
   # @param int_structure [Hash] per-slot session types for intensification phases
   # @param map_assessment [MapAssessment, nil] optional MAP for exercise personalization
   def call(client:, assessment:, goal:, volume:, frequency:,
-           acc_structure: nil, int_structure: nil, map_assessment: nil,
-           **_ignored)
+           acc_structure: nil, int_structure: nil,
+           acc_split: nil, int_split: nil,
+           map_assessment: nil, **_ignored)
     @acc_structure = acc_structure || Kilo::MicrocycleStructures::DEFAULT_ACC
     @int_structure = int_structure || Kilo::MicrocycleStructures::DEFAULT_INT
+    @acc_split = acc_split
+    @int_split = int_split
     annotations = []
 
     # Step 1: MAP assessment (optional)
@@ -82,13 +85,22 @@ class Kilo::ProgramGenerator
 
     # Step 5-7: For each mesocycle, select split + methods + generate sessions
     mesocycle_data = macro_blueprint.mesocycles.map do |meso|
-      # Step 5: Training split
-      split_result = select_split_safe(
-        goal: goal,
-        phase: meso[:phase],
-        training_level: client.training_age,
-        frequency: frequency
-      )
+      # Step 5: Training split (use coach-selected if provided)
+      is_acc = meso[:phase] == :accumulation
+      coach_split = is_acc ? @acc_split : @int_split
+
+      split_result = if coach_split
+        result = Kilo::TrainingSplitSelector::SplitBlueprint.new(
+          split_structure: coach_split.split_structure, frequency: coach_split.frequency
+        )
+        result.annotate(step: "training_split_selection", rule: "Coach-selected split",
+          value: "#{coach_split.goal.titleize} / #{coach_split.training_level.capitalize} / #{coach_split.frequency}x",
+          decision: "Using coach-selected training split")
+        result
+      else
+        select_split_safe(goal: goal, phase: meso[:phase],
+          training_level: client.training_age, frequency: frequency)
+      end
       annotations.concat(split_result.annotations) if split_result
 
       # Step 6: Training methods

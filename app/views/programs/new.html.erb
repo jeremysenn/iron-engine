@@ -52,6 +52,43 @@
     </div>
   </div>
 
+  <%# Training Split Selection %>
+  <% if @training_splits.any? %>
+    <div class="bg-white rounded-lg border border-slate-200 p-4">
+      <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3">Training Split</h3>
+      <p class="text-xs text-slate-400 mb-3">Select a training split or leave as default (Upper/Lower 4x). The split determines which body parts are trained on which days.</p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Accumulation Split</label>
+          <select name="acc_split_id" class="<%= select_class %>">
+            <option value="">Default (Upper/Lower)</option>
+            <% KiloTrainingSplit.where(phase: :accumulation).order(:goal, :training_level).each do |split| %>
+              <option value="<%= split.id %>">
+                <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
+                <% days = split.split_structure.values.uniq.reject { |v| v == "OFF" } %>
+                (<%= days.map(&:titleize).join(", ") %>)
+              </option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Intensification Split</label>
+          <select name="int_split_id" class="<%= select_class %>">
+            <option value="">Default (Upper/Lower)</option>
+            <% KiloTrainingSplit.where(phase: :intensification).order(:goal, :training_level).each do |split| %>
+              <option value="<%= split.id %>">
+                <%= split.goal.titleize %> · <%= split.training_level.capitalize %> · <%= split.frequency %>x/wk
+                <% days = split.split_structure.values.uniq.reject { |v| v == "OFF" } %>
+                (<%= days.map(&:titleize).join(", ") %>)
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
   <%# Accumulation Microcycle - per slot selection %>
   <div class="bg-white rounded-lg border border-slate-200 p-4">
     <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">

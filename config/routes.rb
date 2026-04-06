@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     resources :map_assessments, only: %i[new create show]
     resources :prime_eight_assessments, only: %i[new create show]
     resources :programs, only: %i[new create show]
+    resources :workouts, only: %i[show update]
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

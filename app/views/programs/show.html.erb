@@ -52,8 +52,11 @@
         <div class="px-4 pb-3">
           <% micro.training_sessions.order(:day).each do |session| %>
             <div class="mt-3">
-              <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">
-                <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+              <div class="flex items-center justify-between mb-1">
+                <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+                </div>
+                <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
               </div>
 
               <table class="w-full text-sm">

@@ -7,6 +7,7 @@ class ProgramsController < ApplicationController
   def new
     @assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
     @has_assessment = @assessment&.prime_eight_lifts&.any?
+    @training_splits = KiloTrainingSplit.all.group_by { |s| "#{s.goal}_#{s.phase}" }
   end
 
   def create
@@ -14,6 +15,10 @@ class ProgramsController < ApplicationController
 
     acc_structure = Kilo::MicrocycleStructures.from_params(params[:acc_structure])
     int_structure = Kilo::MicrocycleStructures.from_params(params[:int_structure])
+
+    # Load selected training splits (or use defaults)
+    acc_split = params[:acc_split_id].present? ? KiloTrainingSplit.find(params[:acc_split_id]) : nil
+    int_split = params[:int_split_id].present? ? KiloTrainingSplit.find(params[:int_split_id]) : nil
 
     generator = Kilo::ProgramGenerator.new
     @program = generator.call(
@@ -24,6 +29,8 @@ class ProgramsController < ApplicationController
       frequency: params[:frequency].to_i,
       acc_structure: acc_structure,
       int_structure: int_structure,
+      acc_split: acc_split,
+      int_split: int_split,
       map_assessment: @client.map_assessments.order(assessed_at: :desc).first
     )
 
