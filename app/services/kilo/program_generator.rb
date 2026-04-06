@@ -130,7 +130,8 @@ class Kilo::ProgramGenerator
           intensity_pct: rep_scheme_record&.intensity_pct,
           microcycle_structure: current_structure,
           methods: method_result.methods,
-          movement_result: movement_result
+          movement_result: movement_result,
+          phase: meso[:phase]
         )
         annotations.concat(session_result.annotations)
 

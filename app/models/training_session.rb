@@ -25,4 +25,20 @@ class TrainingSession < ApplicationRecord
   def template_name
     template&.dig(:name) || session_type.titleize
   end
+
+  def estimated_duration_seconds
+    exercises = session_exercises.map do |se|
+      {
+        sets: se.sets,
+        target_reps: se.exercise_sets.first&.target_reps.to_s,
+        tempo: se.tempo,
+        rest_seconds: se.rest_seconds
+      }
+    end
+    Kilo::RestCalculator.estimate_duration(exercises)
+  end
+
+  def estimated_duration
+    Kilo::RestCalculator.format_duration(estimated_duration_seconds)
+  end
 end

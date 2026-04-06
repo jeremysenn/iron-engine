@@ -29,7 +29,7 @@ class Kilo::SessionGenerator
   # @param movement_result [MovementResult] MAP assessment result (optional)
   def call(split_structure:, rep_scheme: nil, intensity_pct: nil,
            microcycle_structure: nil, exercise_overrides: {},
-           movement_result: nil, methods: [], **_ignored)
+           movement_result: nil, methods: [], phase: :accumulation, **_ignored)
 
     sessions = []
 
@@ -50,14 +50,18 @@ class Kilo::SessionGenerator
         rep_scheme: rep_scheme,
         intensity_pct: intensity_pct,
         overrides: exercise_overrides.dig(day.to_s) || {},
-        movement_result: movement_result
+        movement_result: movement_result,
+        phase: phase
       )
+
+      estimated_duration = Kilo::RestCalculator.estimate_duration(exercises)
 
       sessions << {
         day: day.to_s,
         session_type: resolved_type,
         template_name: template[:name],
-        exercises: exercises
+        exercises: exercises,
+        estimated_duration: estimated_duration
       }
     end
 
@@ -84,7 +88,7 @@ class Kilo::SessionGenerator
     microcycle_structure[session_type.to_sym] || microcycle_structure[session_type.to_s] || session_type
   end
 
-  def build_from_template(template:, rep_scheme:, intensity_pct:, overrides:, movement_result:)
+  def build_from_template(template:, rep_scheme:, intensity_pct:, overrides:, movement_result:, phase: :accumulation)
     a_sets, a_reps = parse_rep_scheme(rep_scheme)
 
     template[:slots].map do |slot|
@@ -114,7 +118,7 @@ class Kilo::SessionGenerator
         sets: sets,
         target_reps: reps.to_s,
         tempo: slot[:tempo],
-        rest_seconds: slot[:rest]
+        rest_seconds: Kilo::RestCalculator.for(slot[:position], phase: phase)
       }
     end
   end

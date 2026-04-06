@@ -58,8 +58,11 @@
           <% micro.training_sessions.order(:day).each do |session| %>
             <div class="mt-3">
               <div class="flex items-center justify-between mb-1">
-                <div class="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                  <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                    <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+                  </span>
+                  <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]">~<%= session.estimated_duration %></span>
                 </div>
                 <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
               </div>
