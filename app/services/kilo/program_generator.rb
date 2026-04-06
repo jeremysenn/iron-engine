@@ -36,9 +36,13 @@ class Kilo::ProgramGenerator
   # @param assessment [PrimeEightAssessment]
   # @param goal [String] hypertrophy/absolute_strength/relative_strength/power
   # @param volume [String] low/medium/high
-  # @param frequency [Integer] 2/3/4
+  # @param frequency [Integer] 2/3/4/5
+  # @param acc_microcycle [String] "1" or "2" - microcycle structure for accumulation phases
+  # @param int_microcycle [String] "1" or "2" - microcycle structure for intensification phases
   # @param map_assessment [MapAssessment, nil] optional MAP for exercise personalization
-  def call(client:, assessment:, goal:, volume:, frequency:, map_assessment: nil)
+  def call(client:, assessment:, goal:, volume:, frequency:, acc_microcycle: "1", int_microcycle: "2", map_assessment: nil)
+    @acc_structure = Kilo::MicrocycleStructures.for(acc_microcycle)
+    @int_structure = Kilo::MicrocycleStructures.for(int_microcycle)
     annotations = []
 
     # Step 1: MAP assessment (optional)
@@ -181,6 +185,8 @@ class Kilo::ProgramGenerator
         limiting_upper: ratio_result&.limiting_upper.to_s,
         limiting_lower: ratio_result&.limiting_lower.to_s,
         ratios: ratio_result ? ratio_result.ratios.transform_values { |v| v.except(:lift) } : {},
+        acc_microcycle: @acc_structure,
+        int_microcycle: @int_structure,
         annotations: annotations
       }
 

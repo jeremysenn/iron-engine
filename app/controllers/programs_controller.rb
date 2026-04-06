@@ -19,6 +19,8 @@ class ProgramsController < ApplicationController
       goal: params[:goal],
       volume: params[:volume],
       frequency: params[:frequency].to_i,
+      acc_microcycle: params[:acc_microcycle] || "1",
+      int_microcycle: params[:int_microcycle] || "2",
       map_assessment: @client.map_assessments.order(assessed_at: :desc).first
     )
 

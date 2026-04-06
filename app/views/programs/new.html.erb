@@ -49,6 +49,24 @@
     </select>
   </div>
 
+  <div>
+    <label class="block text-sm font-medium text-slate-500 mb-1">Accumulation Microcycle Structure</label>
+    <select name="acc_microcycle" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+      <option value="1" selected>Structure 1: OH Press / Squat 1 / Bench Press / Front Squat</option>
+      <option value="2">Structure 2: Incline Press / Squat 2 / Dip / Deadlift</option>
+    </select>
+    <p class="text-xs text-slate-400 mt-1">UB1 / LB1 / UB2 / LB2 session types for accumulation weeks</p>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-slate-500 mb-1">Intensification Microcycle Structure</label>
+    <select name="int_microcycle" required class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+      <option value="1">Structure 1: OH Press / Squat 1 / Bench Press / Front Squat</option>
+      <option value="2" selected>Structure 2: Incline Press / Squat 2 / Dip / Deadlift</option>
+    </select>
+    <p class="text-xs text-slate-400 mt-1">UB1 / LB1 / UB2 / LB2 session types for intensification weeks</p>
+  </div>
+
   <div class="flex items-center gap-3 pt-4">
     <input type="submit" value="Generate Program" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors" data-turbo-submits-with="Generating...">
     <%= link_to "Cancel", client_path(@client), class: "text-sm text-slate-500 hover:text-slate-700" %>
