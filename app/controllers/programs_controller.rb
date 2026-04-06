@@ -2,7 +2,7 @@ class ProgramsController < ApplicationController
   include Scopeable
 
   before_action :find_client
-  before_action :find_program, only: %i[show]
+  before_action :find_program, only: %i[show edit update]
 
   def new
     @assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
