@@ -2,8 +2,9 @@ class ExercisesController < ApplicationController
   before_action :find_exercise, only: %i[show edit update]
 
   def index
-    @exercises = KiloExercise.available_for(Current.user).order(:category, :name)
-    @categories = @exercises.group_by(&:category)
+    @exercises = KiloExercise.available_for(Current.user).order(:body_region, :category, :subcategory, :name)
+    # Group by body_region -> category
+    @grouped = @exercises.group_by(&:body_region)
   end
 
   def show
@@ -43,6 +44,6 @@ class ExercisesController < ApplicationController
   end
 
   def exercise_params
-    params.require(:kilo_exercise).permit(:name, :category, :equipment, :grip_type, :grip_width)
+    params.require(:kilo_exercise).permit(:name, :body_region, :category, :subcategory, :equipment, :grip_type, :grip_width)
   end
 end

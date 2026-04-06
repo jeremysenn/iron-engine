@@ -1,53 +1,75 @@
-name,category,equipment,grip_type,grip_width,progression_order,rotation_group
-Back Squat,lower_quad,barbell,,,1,
-Front Squat,lower_quad,barbell,clean,,2,
-Deadlift,lower_hip,barbell,double_overhand,,1,
-Romanian Deadlift,lower_hip,barbell,double_overhand,,2,
-Bench Press,upper_press,barbell,pronated,medium,1,press_oh_flat
-Overhead Press,upper_press,barbell,pronated,medium,1,press_oh_flat
-Incline Press,upper_press,barbell,pronated,medium,1,press_incline_dip
-Dip,upper_press,bodyweight,,,1,press_incline_dip
-Close-Grip Bench Press,upper_press,barbell,pronated,narrow,2,press_oh_flat
-Flat DB Press,upper_press,dumbbell,neutral,,2,press_oh_flat
-Seated DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
-Incline DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
-Decline DB Press,upper_press,dumbbell,neutral,,2,press_incline_dip
-Chin-Up,upper_pull,bodyweight,supinated,,1,pull_vertical
-Pull-Up,upper_pull,bodyweight,pronated,,1,pull_vertical
-Barbell Row,upper_pull,barbell,pronated,medium,1,pull_horizontal
-Seated Cable Row,upper_pull,cable,neutral,,2,pull_horizontal
-Face Pull,upper_pull,cable,pronated,,3,pull_horizontal
-Pulldown - Close Grip - Semi-Supinated,upper_pull,cable,semi_supinated,close,2,pull_vertical
-Pulldown - Close Grip - Neutral,upper_pull,cable,neutral,close,2,pull_vertical
-Pulldown - Close Grip - Semi-Pronated,upper_pull,cable,semi_pronated,close,2,pull_vertical
-Pulldown - Medium Grip - Semi-Supinated,upper_pull,cable,semi_supinated,medium,2,pull_vertical
-Pulldown - Medium Grip - Neutral,upper_pull,cable,neutral,medium,2,pull_vertical
-Pulldown - Medium Grip - Semi-Pronated,upper_pull,cable,semi_pronated,medium,2,pull_vertical
-Pulldown - Wide Grip - Semi-Supinated,upper_pull,cable,semi_supinated,wide,2,pull_vertical
-Pulldown - Wide Grip - Neutral,upper_pull,cable,neutral,wide,2,pull_vertical
-Pulldown - Wide Grip - Semi-Pronated,upper_pull,cable,semi_pronated,wide,2,pull_vertical
-DB Row,upper_pull,dumbbell,neutral,,2,pull_horizontal
-Split Squat,lower_quad,dumbbell,,,3,
-Leg Press,lower_quad,machine,,,3,
-Leg Curl,lower_hip,machine,,,3,
-Leg Extension,lower_quad,machine,,,3,
-Goblet Squat,lower_quad,dumbbell,,,4,
-Step-Up,lower_quad,dumbbell,,,4,
-Hip Thrust,lower_hip,barbell,,,2,
-Calf Raise,lower_calf,machine,,,1,
-Back Extension,lower_hip,bodyweight,,,3,
-Barbell Curl,upper_arm,barbell,supinated,,1,
-Tricep Pushdown,upper_arm,cable,pronated,,1,
-Tricep Extension,upper_arm,dumbbell,neutral,,2,
-Lateral Raise,upper_shoulder,dumbbell,,,1,
-External Rotation,upper_shoulder,dumbbell,,,1,
-Trap 3 Raise,upper_shoulder,dumbbell,,,1,
-Lunge,lower_quad,dumbbell,,,3,
-Hack Squat,lower_quad,barbell,,,2,
-Squat - Pin Touch,lower_quad,barbell,,,2,
-Cyclist Squat,lower_quad,barbell,,,2,
-Deadlift - Rack,lower_hip,barbell,,,2,
-Deadlift - Trap Bar,lower_hip,barbell,,,2,
-Crunch,abdominal,bodyweight,,,1,
-Ab Rollout,abdominal,bodyweight,,,2,
-Push-Up,upper_press,bodyweight,,,3,
+name,body_region,category,subcategory,equipment,grip_type,grip_width,progression_order,rotation_group
+Overhead Press,Upper Body,Overhead Press,,barbell,,,1,press_oh_flat
+Press - Seated - DB,Upper Body,Overhead Press,,dumbbell,,,2,press_oh_flat
+Press - Standing - DB,Upper Body,Overhead Press,,dumbbell,,,2,press_oh_flat
+Incline Press,Upper Body,Incline Press,,barbell,,,1,press_incline_dip
+Press - 15° Incline - DB,Upper Body,Incline Press,,dumbbell,,,2,press_incline_dip
+Bench Press,Upper Body,Flat Press,,barbell,,,1,press_oh_flat
+Press - Flat - DB,Upper Body,Flat Press,,dumbbell,,,2,press_oh_flat
+Press - 25° Decline - DB,Upper Body,Decline Press,,dumbbell,,,2,press_incline_dip
+Press - 35° Decline - DB,Upper Body,Decline Press,,dumbbell,,,3,press_incline_dip
+Close-Grip Bench Press,Upper Body,Flat Press,,barbell,pronated,narrow,2,press_oh_flat
+Dip,Upper Body,Dip,,bodyweight,,,1,press_incline_dip
+Push-Up,Upper Body,Push-Up,,bodyweight,,,1,
+Push-Up - Kneeling,Upper Body,Push-Up,,bodyweight,,,2,
+Push-Up - Incline,Upper Body,Push-Up,,bodyweight,,,3,
+Chin-Up - Close Grip - Semi-Supinated,Upper Body,Chin-Up,,bodyweight,semi_supinated,close,1,pull_vertical
+Chin-Up - Medium Grip - Neutral,Upper Body,Chin-Up,,bodyweight,neutral,medium,1,pull_vertical
+Chin-Up - Medium Grip - Semi-Supinated,Upper Body,Chin-Up,,bodyweight,semi_supinated,medium,1,pull_vertical
+Chin-Up - Wide Grip - Neutral,Upper Body,Chin-Up,,bodyweight,neutral,wide,1,pull_vertical
+Pull-Up - Close Grip - Pronated,Upper Body,Pull-Up,,bodyweight,pronated,close,1,pull_vertical
+Pull-Up - Medium Grip - Pronated,Upper Body,Pull-Up,,bodyweight,pronated,medium,1,pull_vertical
+Pull-Up - Wide Grip - Pronated,Upper Body,Pull-Up,,bodyweight,pronated,wide,1,pull_vertical
+Pulldown - Close Grip - Semi-Supinated,Upper Body,Pulldown,,cable,semi_supinated,close,2,pull_vertical
+Pulldown - Close Grip - Neutral,Upper Body,Pulldown,,cable,neutral,close,2,pull_vertical
+Pulldown - Close Grip - Semi-Pronated,Upper Body,Pulldown,,cable,semi_pronated,close,2,pull_vertical
+Pulldown - Medium Grip - Semi-Supinated,Upper Body,Pulldown,,cable,semi_supinated,medium,2,pull_vertical
+Pulldown - Medium Grip - Neutral,Upper Body,Pulldown,,cable,neutral,medium,2,pull_vertical
+Pulldown - Medium Grip - Semi-Pronated,Upper Body,Pulldown,,cable,semi_pronated,medium,2,pull_vertical
+Pulldown - Wide Grip - Semi-Supinated,Upper Body,Pulldown,,cable,semi_supinated,wide,2,pull_vertical
+Pulldown - Wide Grip - Neutral,Upper Body,Pulldown,,cable,neutral,wide,2,pull_vertical
+Pulldown - Wide Grip - Semi-Pronated,Upper Body,Pulldown,,cable,semi_pronated,wide,2,pull_vertical
+Row - Bent-Over - DB - Neutral,Upper Body,Row,,dumbbell,neutral,,1,pull_horizontal
+Row - Bent-Over - DB - Supinating,Upper Body,Row,,dumbbell,supinating,,1,pull_horizontal
+Row - Bent-Over - DB - Pronated,Upper Body,Row,,dumbbell,pronated,,1,pull_horizontal
+Row - Bent-Over - BB - Medium Grip - Pronated,Upper Body,Row,,barbell,pronated,medium,1,pull_horizontal
+Row - Seated - Medium Grip - Neutral,Upper Body,Row,,cable,neutral,medium,2,pull_horizontal
+Row - Seated - Medium Grip - Semi-Supinated,Upper Body,Row,,cable,semi_supinated,medium,2,pull_horizontal
+Face Pull,Upper Body,Row,,cable,pronated,,3,pull_horizontal
+Pressdown - High Pulley - Pronated - One-Arm,Upper Body,Triceps,Arm to Side,cable,pronated,,1,
+Triceps Extension - 25° Decline - DB,Upper Body,Triceps,Arm in Front,dumbbell,,,1,
+French Press - Seated - DB,Upper Body,Triceps,Arm Above,dumbbell,,,1,
+Curl - 45° Incline - DB - Supinated,Upper Body,Biceps,Arm Behind,dumbbell,supinated,,1,
+Curl - Seated - DB - Supinated,Upper Body,Biceps,Arm to Side,dumbbell,supinated,,1,
+Curl - Scott - DB - Supinated,Upper Body,Biceps,Arm in Front,dumbbell,supinated,,1,
+Lateral Raise - Standing - DB,Upper Body,Lateral Deltoid,,dumbbell,,,1,
+Trap 3 Raise - Prone - 35° Incline - DB,Upper Body,Scapular Retractors,Scapular Adduction,dumbbell,,,1,
+External Rotation - Seated - Arm to Side - DB,Upper Body,External Rotators,Arm Adducted to Side,dumbbell,,,1,
+External Rotation - Standing - Arm Abducted - DB,Upper Body,External Rotators,Arm Abducted to Side,dumbbell,,,1,
+Back Squat,Lower Body,Squat,Long Range,barbell,,,1,
+Front Squat,Lower Body,Squat,Long Range,barbell,clean,,2,
+Goblet Squat,Lower Body,Squat,Long Range,dumbbell,,,3,
+Squat - Hack - BB,Lower Body,Squat,Short Range,barbell,,,2,
+Squat - Pin Touch - Top Range,Lower Body,Squat,Short Range,barbell,,,2,
+Cyclist Squat,Lower Body,Squat,Short Range,barbell,,,3,
+Deadlift,Lower Body,Deadlift,Long Range,barbell,double_overhand,,1,
+Romanian Deadlift,Lower Body,Deadlift,Long Range,barbell,double_overhand,,2,
+Deadlift - Rack - Mid Thigh - BB - Wide Grip,Lower Body,Deadlift,Short Range,barbell,pronated,wide,2,
+Deadlift - Rack - Above Knee - BB - Medium Grip,Lower Body,Deadlift,Short Range,barbell,pronated,medium,2,
+Deadlift - Trap Bar,Lower Body,Deadlift,Long Range,barbell,neutral,,2,
+Split Squat,Lower Body,Knee Extension,Split Squat,dumbbell,,,1,
+Lunge - Walking - DB,Lower Body,Knee Extension,Lunge,dumbbell,,,1,
+Lunge - Alternating - BB,Lower Body,Knee Extension,Lunge,barbell,,,2,
+Step-Up - Front - DB,Lower Body,Knee Extension,Step-Up,dumbbell,,,1,
+Leg Extension,Lower Body,Knee Extension,Leg Machine,machine,,,1,
+Leg Press - Wide Stance,Lower Body,Knee Extension,Leg Machine,machine,,,2,
+Leg Curl - Lying - Feet Neutral - Dorsiflexed,Lower Body,Knee Flexion,Leg Curl,machine,,,1,
+Glute Ham Raise,Lower Body,Knee Flexion,Glute Ham Raise,bodyweight,,,1,
+Back Extension - Horizontal,Lower Body,Hip Extension,Mid Range,bodyweight,,,1,
+Back Extension - Incline,Lower Body,Hip Extension,Mid Range,bodyweight,,,2,
+Hip Thrust,Lower Body,Hip Extension,Top Range,barbell,,,1,
+Calf Raise - Standing - Machine,Lower Body,Calves,Gastrocnemius,machine,,,1,
+Calf Raise - Seated - Machine,Lower Body,Calves,Soleus,machine,,,1,
+Anterior Tibialis Raise - Seated,Lower Body,Calves,Anterior Tibialis,machine,,,1,
+Ab Rollout - Kneeling,Lower Body,Abdominals,Stabilization,bodyweight,,,1,
+Crunch - Kneeling - High Pulley,Lower Body,Abdominals,Flexion,cable,,,1,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_133801) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_201345) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_133801) do
   end
 
   create_table "kilo_exercises", force: :cascade do |t|
+    t.string "body_region"
     t.string "category"
     t.datetime "created_at", null: false
     t.boolean "custom", default: false, null: false
@@ -58,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_133801) do
     t.string "name"
     t.integer "progression_order"
     t.integer "rotation_group"
+    t.string "subcategory"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_kilo_exercises_on_user_id"

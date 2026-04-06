@@ -33,8 +33,8 @@
               <label class="block text-xs text-slate-400 mb-1">Replace with</label>
               <select name="kilo_exercise_id" class="w-full px-2 py-1.5 rounded border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
                 <option value="">— Select exercise —</option>
-                <% KiloExercise.available_for(Current.user).order(:category, :name).group_by(&:category).each do |cat, exercises| %>
-                  <optgroup label="<%= cat.titleize %>">
+                <% KiloExercise.available_for(Current.user).order(:body_region, :category, :subcategory, :name).group_by { |e| "#{e.body_region} — #{e.category}#{e.subcategory.present? ? " (#{e.subcategory})" : ""}" }.each do |group_label, exercises| %>
+                  <optgroup label="<%= group_label %>">
                     <% exercises.each do |ex| %>
                       <option value="<%= ex.id %>" <%= 'selected' if ex.id == se.kilo_exercise_id %>><%= ex.name %></option>
                     <% end %>

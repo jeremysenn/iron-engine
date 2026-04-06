@@ -2,26 +2,52 @@
   <%= btn_primary "New Exercise", new_exercise_path %>
 <% end %>
 
-<p class="text-sm text-slate-500 mb-6"><%= KiloExercise.available_for(Current.user).count %> exercises available</p>
+<p class="text-sm text-slate-500 mb-6"><%= @exercises.count %> exercises available</p>
 
-<% @categories.each do |category, exercises| %>
-  <details class="border border-slate-200 rounded-md mb-2 bg-white" open>
-    <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between">
-      <span><%= category.to_s.titleize %></span>
-      <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercises.count %></span>
-    </summary>
-    <div class="px-4 pb-3">
-      <% exercises.each do |exercise| %>
-        <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-          <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
-          <div class="flex items-center gap-2">
-            <% if exercise.custom? %>
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
+<% @grouped.each do |body_region, region_exercises| %>
+  <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg text-slate-800 mt-6 mb-3"><%= body_region || "Uncategorized" %></h2>
+
+  <% region_exercises.group_by(&:category).each do |category, cat_exercises| %>
+    <details class="border border-slate-200 rounded-md mb-2 bg-white">
+      <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between">
+        <span><%= category %></span>
+        <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= cat_exercises.count %></span>
+      </summary>
+      <div class="px-4 pb-3">
+        <% subcats = cat_exercises.group_by(&:subcategory) %>
+        <% if subcats.keys.compact.any? %>
+          <%# Has subcategories - show grouped %>
+          <% subcats.each do |subcat, exercises| %>
+            <% if subcat.present? %>
+              <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-3 mb-1 pt-2 border-t border-slate-100 first:border-0 first:mt-0 first:pt-0"><%= subcat %></div>
             <% end %>
-            <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  </details>
+            <% exercises.each do |exercise| %>
+              <div class="flex items-center justify-between py-1.5">
+                <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
+                <div class="flex items-center gap-2">
+                  <% if exercise.custom? %>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
+                  <% end %>
+                  <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        <% else %>
+          <%# No subcategories - flat list %>
+          <% cat_exercises.each do |exercise| %>
+            <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+              <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
+              <div class="flex items-center gap-2">
+                <% if exercise.custom? %>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
+                <% end %>
+                <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
 <% end %>

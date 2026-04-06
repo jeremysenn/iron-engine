@@ -12,9 +12,19 @@
     <table class="w-full text-sm">
       <tbody>
         <tr class="border-b border-slate-100">
-          <td class="py-2 text-slate-500 w-32">Category</td>
-          <td class="py-2 font-medium"><%= @exercise.category.to_s.titleize %></td>
+          <td class="py-2 text-slate-500 w-32">Body Region</td>
+          <td class="py-2 font-medium"><%= @exercise.body_region || "—" %></td>
         </tr>
+        <tr class="border-b border-slate-100">
+          <td class="py-2 text-slate-500">Category</td>
+          <td class="py-2 font-medium"><%= @exercise.category || "—" %></td>
+        </tr>
+        <% if @exercise.subcategory.present? %>
+        <tr class="border-b border-slate-100">
+          <td class="py-2 text-slate-500">Subcategory</td>
+          <td class="py-2 font-medium"><%= @exercise.subcategory %></td>
+        </tr>
+        <% end %>
         <tr class="border-b border-slate-100">
           <td class="py-2 text-slate-500">Equipment</td>
           <td class="py-2 font-medium"><%= @exercise.equipment&.titleize || "—" %></td>
