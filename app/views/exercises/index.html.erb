@@ -23,7 +23,14 @@
             <% end %>
             <% exercises.each do |exercise| %>
               <div class="flex items-center justify-between py-1.5">
-                <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
+                <div class="flex items-center gap-2">
+                  <% if (thumb = youtube_thumbnail(exercise.video_url)) %>
+                    <%= link_to exercise_path(exercise) do %>
+                      <img src="<%= thumb %>" alt="" class="w-8 h-6 rounded object-cover" loading="lazy">
+                    <% end %>
+                  <% end %>
+                  <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
+                </div>
                 <div class="flex items-center gap-2">
                   <% if exercise.custom? %>
                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>

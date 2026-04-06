@@ -35,4 +35,17 @@ module ApplicationHelper
   def mono(text)
     content_tag(:span, text, class: "font-['JetBrains_Mono',monospace] tabular-nums")
   end
+
+  def youtube_video_id(url)
+    return nil unless url.present?
+    url.to_s.split("/").last.split("?").first
+  end
+
+  def youtube_thumbnail(url, size: :small)
+    vid = youtube_video_id(url)
+    return nil unless vid
+    # default = 120x90, mqdefault = 320x180
+    quality = size == :small ? "default" : "mqdefault"
+    "https://img.youtube.com/vi/#{vid}/#{quality}.jpg"
+  end
 end
