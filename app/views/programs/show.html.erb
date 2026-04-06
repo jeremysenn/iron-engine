@@ -71,7 +71,7 @@
                     <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1">Exercise</th>
                     <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Sets</th>
                     <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Reps</th>
-                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-16">Tempo</th>
+                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-20">Tempo</th>
                     <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Rest</th>
                   </tr>
                 </thead>
@@ -90,7 +90,7 @@
                       </td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.sets %></td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.exercise_sets.first&.target_reps || "—" %></td>
-                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.tempo %></td>
+                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500 whitespace-nowrap"><%= se.tempo %></td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.rest_seconds %>s</td>
                     </tr>
                   <% end %>
