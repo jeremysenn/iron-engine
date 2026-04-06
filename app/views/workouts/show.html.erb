@@ -13,7 +13,11 @@
       <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
-          <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+          <% if se.kilo_exercise_id %>
+            <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "font-medium text-sm text-slate-700 hover:text-teal-600" %>
+          <% else %>
+            <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+          <% end %>
         </div>
         <div class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]">
           <%= se.tempo %> · <%= se.rest_seconds %>s rest

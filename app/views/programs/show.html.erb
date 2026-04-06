@@ -76,7 +76,13 @@
                       <%= se.position.start_with?('A') ? 'border-l-2 border-l-teal-500' : '' %>
                       <%= se.position.start_with?('B') ? 'border-l-2 border-l-slate-300' : '' %>">
                       <td class="px-2 py-1.5 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= se.position %></td>
-                      <td class="px-2 py-1.5 font-medium"><%= se.exercise_name %></td>
+                      <td class="px-2 py-1.5 font-medium">
+                        <% if se.kilo_exercise_id %>
+                          <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "text-slate-700 hover:text-teal-600" %>
+                        <% else %>
+                          <%= se.exercise_name %>
+                        <% end %>
+                      </td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.sets %></td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.exercise_sets.first&.target_reps || "—" %></td>
                       <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.tempo %></td>

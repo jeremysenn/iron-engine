@@ -10,6 +10,8 @@ Rails.application.routes.draw do
     resources :workouts, only: %i[show update]
   end
 
+  resources :exercises, only: %i[index show new create edit update]
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "dashboard#index"
