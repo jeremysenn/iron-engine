@@ -65,6 +65,26 @@
   </div>
 <% end %>
 
+<%# Video demo modals %>
+<% @exercises.each do |se| %>
+  <% if se.kilo_exercise&.video_url.present? %>
+    <div id="video-<%= se.id %>" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60" onclick="if(event.target===this){this.classList.add('hidden');this.querySelector('iframe').src=this.querySelector('iframe').src}">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 overflow-hidden" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+          <button onclick="var m=this.closest('[id^=video]');m.classList.add('hidden');m.querySelector('iframe').src=m.querySelector('iframe').src" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="aspect-video">
+          <iframe src="https://www.youtube.com/embed/<%= youtube_video_id(se.kilo_exercise.video_url) %>" class="w-full h-full" frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
 <%# Main workout logging form %>
 <%= form_with url: client_workout_path(@client, @session), method: :patch, class: "space-y-6" do |f| %>
   <% @exercises.each do |se| %>
@@ -74,9 +94,9 @@
           <div class="flex items-center gap-2">
             <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
             <% if se.kilo_exercise&.video_url.present? %>
-              <%= link_to se.kilo_exercise.video_url, target: "_blank", rel: "noopener", class: "shrink-0", title: "Watch demo" do %>
-                <img src="<%= youtube_thumbnail(se.kilo_exercise.video_url) %>" alt="" class="w-10 h-7 rounded object-cover" loading="lazy">
-              <% end %>
+              <button type="button" onclick="document.getElementById('video-<%= se.id %>').classList.remove('hidden')" class="shrink-0" title="Watch demo">
+                <img src="<%= youtube_thumbnail(se.kilo_exercise.video_url) %>" alt="" class="w-10 h-7 rounded object-cover hover:ring-2 hover:ring-teal-500" loading="lazy">
+              </button>
             <% end %>
             <% if se.kilo_exercise_id %>
               <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "font-medium text-sm text-slate-700 hover:text-teal-600" %>

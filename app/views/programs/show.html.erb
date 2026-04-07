@@ -1,6 +1,6 @@
 <%= page_header @client.full_name do %>
   <div class="flex items-center gap-3">
-    <%= btn_secondary "Edit Program", edit_client_program_path(@client, @program) %>
+    <%= btn_primary "Regenerate", new_client_program_path(@client) %>
     <%= btn_secondary "Back to Client", client_path(@client) %>
   </div>
 <% end %>
@@ -10,118 +10,120 @@
 </div>
 
 <%# Macrocycle Timeline %>
+<% mesocycles = @macrocycles.first&.mesocycles&.order(:number)&.to_a || [] %>
 <div class="mb-8">
   <h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Macrocycle Timeline</h2>
-  <div class="grid grid-cols-12 gap-0.5">
-    <% week = 0 %>
-    <% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
+  <% total_weeks = mesocycles.sum { |m| m.microcycles.count } %>
+  <div class="grid gap-0.5" style="grid-template-columns: repeat(<%= total_weeks %>, 1fr)">
+    <% mesocycles.each do |mesocycle| %>
       <% mesocycle.microcycles.order(:week_number).each do |micro| %>
-        <% week += 1 %>
         <div class="px-1 py-2 text-center rounded-sm text-white text-xs font-['JetBrains_Mono',monospace] font-medium
           <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>">
-          W<%= week %>
+          W<%= micro.week_number %>
         </div>
       <% end %>
     <% end %>
   </div>
-  <% phase_counts = { "accumulation" => 0, "intensification" => 0 } %>
-  <div class="grid grid-cols-4 mt-1">
-    <% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
+
+  <%# Block + Phase labels %>
+  <div class="flex mt-1">
+    <% block_num = 0 %>
+    <% phase_counts = { "accumulation" => 0, "intensification" => 0 } %>
+    <% mesocycles.each_with_index do |mesocycle, i| %>
       <% phase_counts[mesocycle.phase] = (phase_counts[mesocycle.phase] || 0) + 1 %>
-      <div class="text-center font-['JetBrains_Mono',monospace] text-[10px] text-slate-400">
+      <% meso_weeks = mesocycle.microcycles.count %>
+      <div class="text-center font-['JetBrains_Mono',monospace] text-[10px] text-slate-400" style="flex: <%= meso_weeks %>">
         <%= mesocycle.phase.titleize %> <%= phase_counts[mesocycle.phase] %>
+      </div>
+    <% end %>
+  </div>
+  <div class="flex mt-0.5">
+    <% mesocycles.each_slice(2) do |pair| %>
+      <% block_num = (block_num || 0) + 1 %>
+      <% pair_weeks = pair.sum { |m| m.microcycles.count } %>
+      <div class="text-center text-[10px] font-medium text-slate-500 border-t border-slate-200 pt-1" style="flex: <%= pair_weeks %>">
+        Block <%= block_num %>
       </div>
     <% end %>
   </div>
 </div>
 
-<%# Session Accordion %>
-<h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Sessions</h2>
-
+<%# Session Accordion grouped by Block %>
+<% block_number = 0 %>
 <% session_phase_counts = { "accumulation" => 0, "intensification" => 0 } %>
-<% @macrocycles.first&.mesocycles&.order(:number)&.each do |mesocycle| %>
-  <% session_phase_counts[mesocycle.phase] = (session_phase_counts[mesocycle.phase] || 0) + 1 %>
-  <div class="mb-6">
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-2 flex items-center gap-2">
-      <span class="inline-block w-3 h-3 rounded-sm <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>"></span>
-      <%= mesocycle.phase.titleize %> <%= session_phase_counts[mesocycle.phase] %>
-    </h3>
+<% mesocycles.each_slice(2) do |block_pair| %>
+  <% block_number += 1 %>
+  <div class="mb-8">
+    <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg text-slate-800 mb-4 pb-2 border-b border-slate-200">
+      Block <%= block_number %>
+    </h2>
 
-    <% mesocycle.microcycles.order(:week_number).each do |micro| %>
-      <details class="border border-slate-200 rounded-md mb-1 bg-white">
-        <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
-          Week <%= micro.week_number %>
-          <span class="text-slate-400 font-normal ml-2"><%= micro.training_sessions.count %> sessions</span>
-        </summary>
+    <% block_pair.each do |mesocycle| %>
+      <% session_phase_counts[mesocycle.phase] = (session_phase_counts[mesocycle.phase] || 0) + 1 %>
+      <div class="mb-6">
+        <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-2 flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded-sm <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>"></span>
+          <%= mesocycle.phase.titleize %> <%= session_phase_counts[mesocycle.phase] %>
+        </h3>
 
-        <div class="px-4 pb-3">
-          <% micro.training_sessions.order(:day).each do |session| %>
-            <div class="mt-3">
-              <div class="flex items-center justify-between mb-1">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
-                  </span>
-                  <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]">~<%= session.estimated_duration %></span>
+        <% mesocycle.microcycles.order(:week_number).each do |micro| %>
+          <details class="border border-slate-200 rounded-md mb-1 bg-white">
+            <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
+              Week <%= micro.week_number %>
+              <span class="text-slate-400 font-normal ml-2"><%= micro.training_sessions.count %> sessions</span>
+            </summary>
+
+            <div class="px-4 pb-3">
+              <% micro.training_sessions.order(:day).each do |session| %>
+                <div class="mt-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                        <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
+                      </span>
+                      <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]">~<%= session.estimated_duration %></span>
+                    </div>
+                    <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
+                  </div>
+
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="border-b border-slate-200">
+                        <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-10">Pos</th>
+                        <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1">Exercise</th>
+                        <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Sets</th>
+                        <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Reps</th>
+                        <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-20">Tempo</th>
+                        <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Rest</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% session.session_exercises.order(:position).each do |se| %>
+                        <tr class="border-b border-slate-100
+                          <%= se.position.start_with?('A') ? 'border-l-2 border-l-teal-500' : '' %>
+                          <%= se.position.start_with?('B') ? 'border-l-2 border-l-slate-300' : '' %>">
+                          <td class="px-2 py-1.5 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= se.position %></td>
+                          <td class="px-2 py-1.5 font-medium">
+                            <% if se.kilo_exercise_id %>
+                              <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "text-slate-700 hover:text-teal-600" %>
+                            <% else %>
+                              <%= se.exercise_name %>
+                            <% end %>
+                          </td>
+                          <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.sets %></td>
+                          <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.exercise_sets.first&.target_reps || "—" %></td>
+                          <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500 whitespace-nowrap"><%= se.tempo %></td>
+                          <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.rest_seconds %>s</td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
                 </div>
-                <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
-              </div>
-
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-slate-200">
-                    <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-10">Pos</th>
-                    <th class="text-left text-[10px] font-medium text-slate-400 uppercase px-2 py-1">Exercise</th>
-                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Sets</th>
-                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Reps</th>
-                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-20">Tempo</th>
-                    <th class="text-right text-[10px] font-medium text-slate-400 uppercase px-2 py-1 w-12">Rest</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% session.session_exercises.order(:position).each do |se| %>
-                    <tr class="border-b border-slate-100
-                      <%= se.position.start_with?('A') ? 'border-l-2 border-l-teal-500' : '' %>
-                      <%= se.position.start_with?('B') ? 'border-l-2 border-l-slate-300' : '' %>">
-                      <td class="px-2 py-1.5 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= se.position %></td>
-                      <td class="px-2 py-1.5 font-medium">
-                        <% if se.kilo_exercise_id %>
-                          <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "text-slate-700 hover:text-teal-600" %>
-                        <% else %>
-                          <%= se.exercise_name %>
-                        <% end %>
-                      </td>
-                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.sets %></td>
-                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace]"><%= se.exercise_sets.first&.target_reps || "—" %></td>
-                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500 whitespace-nowrap"><%= se.tempo %></td>
-                      <td class="px-2 py-1.5 text-right font-['JetBrains_Mono',monospace] text-slate-500"><%= se.rest_seconds %>s</td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
+              <% end %>
             </div>
-          <% end %>
-        </div>
-      </details>
+          </details>
+        <% end %>
+      </div>
     <% end %>
   </div>
-<% end %>
-
-<%# Show Your Work %>
-<% if @program.generation_metadata&.dig("annotations")&.any? %>
-  <details class="mt-8 border border-slate-200 rounded-md bg-white">
-    <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-teal-600 hover:bg-slate-50">
-      Show Reasoning
-    </summary>
-    <div class="px-4 pb-4 space-y-2">
-      <% @program.generation_metadata["annotations"].each do |ann| %>
-        <div class="bg-slate-50 rounded-md p-3">
-          <div class="font-['JetBrains_Mono',monospace] text-xs text-teal-600 mb-0.5"><%= ann["step"] %></div>
-          <div class="text-sm font-medium text-slate-700"><%= ann["rule"] %></div>
-          <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500"><%= ann["value"] %></div>
-          <div class="text-sm text-slate-600 mt-0.5"><%= ann["decision"] %></div>
-        </div>
-      <% end %>
-    </div>
-  </details>
 <% end %>
