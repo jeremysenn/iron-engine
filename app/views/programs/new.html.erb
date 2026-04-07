@@ -16,48 +16,83 @@
 
 <% sc = "w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1" %>
 
+<%# Pre-populate from query params (e.g., when regenerating) %>
+<% preset_goal = params[:goal].to_s %>
+<% preset_freq = (params[:frequency] || 4).to_i %>
+<% preset_volume = (params[:volume] || "medium").to_s %>
+
+<%# Build JSON data for ALL splits for this training level %>
+<% all_splits = KiloTrainingSplit.where(training_level: @client.training_age).order(:goal, :phase, :frequency) %>
+<% splits_json = all_splits.map { |s|
+  struct = s.split_structure.is_a?(String) ? JSON.parse(s.split_structure) : s.split_structure
+  { id: s.id, goal: s.goal, phase: s.phase, frequency: s.frequency,
+    name: s.name, training_level: s.training_level,
+    summary: s.session_type_summary, display: s.display_label_with_days }
+}.to_json %>
+
 <%= form_with url: client_programs_path(@client), method: :post, class: "max-w-2xl space-y-5" do |f| %>
   <div class="grid grid-cols-2 gap-4">
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Goal</label>
-      <select name="goal" required class="<%= sc %>">
+      <select name="goal" required class="<%= sc %>" id="goal-select" onchange="updateTrainingSplits()">
         <option value="">Select goal</option>
-        <option value="balanced">Balanced</option>
-        <option value="hypertrophy">Hypertrophy</option>
-        <option value="absolute_strength">Absolute Strength</option>
-        <option value="relative_strength">Relative Strength</option>
-        <option value="power">Power</option>
+        <% [["balanced", "Balanced"], ["hypertrophy", "Hypertrophy"], ["absolute_strength", "Absolute Strength"], ["relative_strength", "Relative Strength"], ["power", "Power"]].each do |val, label| %>
+          <option value="<%= val %>" <%= 'selected' if preset_goal == val %>><%= label %></option>
+        <% end %>
       </select>
     </div>
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Volume Tolerance</label>
       <select name="volume" required class="<%= sc %>">
-        <option value="low">Low</option>
-        <option value="medium" selected>Medium</option>
-        <option value="high">High</option>
+        <% %w[low medium high].each do |v| %>
+          <option value="<%= v %>" <%= 'selected' if preset_volume == v %>><%= v.capitalize %></option>
+        <% end %>
       </select>
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div>
-      <label class="block text-sm font-medium text-slate-500 mb-1">Training Split</label>
-      <select name="training_split_type" required class="<%= sc %>" id="split-type-select"
-              onchange="updateFormSections()">
-        <option value="2x_full_body">2x / week — Full Body</option>
-        <option value="3x_full_body">3x / week — Full Body</option>
-        <option value="3x_upper_lower">3x / week — Upper / Lower</option>
-        <option value="4x_upper_lower" selected>4x / week — Upper / Lower</option>
-        <option value="4x_upper_lower_14day">4x / week — Upper / Lower (14-day microcycle)</option>
-        <option value="4x_body_part">4x / week — Body Part</option>
-        <option value="5x_body_part">5x / week — Body Part</option>
+      <label class="block text-sm font-medium text-slate-500 mb-1">Training Frequency</label>
+      <select name="frequency" required class="<%= sc %>" id="frequency-select" onchange="updateTrainingSplits()">
+        <% (2..5).each do |f| %>
+          <option value="<%= f %>" <%= 'selected' if preset_freq == f %>><%= f %>x / week</option>
+        <% end %>
       </select>
-      <input type="hidden" name="frequency" id="frequency-hidden" value="4">
     </div>
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Microcycle Length</label>
       <div id="microcycle-length-display" class="px-3 py-2.5 rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-600 font-['JetBrains_Mono',monospace]">
         7 days (1 week)
+      </div>
+    </div>
+  </div>
+
+  <%# === Training Split Selection === %>
+  <div class="bg-white rounded-lg border border-slate-200 p-4" id="training-split-section">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Training Split</h3>
+    <p class="text-xs text-slate-400 mb-3">
+      Default auto-selected for the chosen Goal + Frequency.
+      Override with any available split if needed.
+    </p>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+          <span class="inline-block w-2 h-2 rounded-sm bg-teal-600"></span> Accumulation Split
+        </label>
+        <select name="acc_split_id" class="<%= sc %>" id="acc-split-select">
+          <option value="">Select goal first...</option>
+        </select>
+        <p class="text-xs text-slate-400 mt-1 font-['JetBrains_Mono',monospace] truncate" id="acc-split-preview"></p>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+          <span class="inline-block w-2 h-2 rounded-sm bg-amber-600"></span> Intensification Split
+        </label>
+        <select name="int_split_id" class="<%= sc %>" id="int-split-select">
+          <option value="">Select goal first...</option>
+        </select>
+        <p class="text-xs text-slate-400 mt-1 font-['JetBrains_Mono',monospace] truncate" id="int-split-preview"></p>
       </div>
     </div>
   </div>
@@ -88,8 +123,9 @@
   <% lb_opts = Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS %>
   <% fb_opts = Kilo::MicrocycleStructures::FULL_BODY_OPTIONS %>
 
-  <%# === 2x Full Body === %>
-  <div data-split="2x_full_body" class="hidden space-y-4">
+  <%# === Microcycle Structure Customization === %>
+  <%# 2x Full Body %>
+  <div data-split-type="full_body" data-freq="2" class="hidden space-y-4">
     <% { "Accumulation" => ["teal", { "full_body_1" => "squat_1_overhead_press", "full_body_2" => "front_squat_incline_press" }],
          "Intensification" => ["amber", { "full_body_1" => "squat_2_bench_press", "full_body_2" => "deadlift_dip" }]
        }.each do |phase, (color, defaults)| %>
@@ -113,8 +149,8 @@
     <% end %>
   </div>
 
-  <%# === 3x Full Body === %>
-  <div data-split="3x_full_body" class="hidden space-y-4">
+  <%# 3x Full Body %>
+  <div data-split-type="full_body" data-freq="3" class="hidden space-y-4">
     <% { "Accumulation" => ["teal", { "session_1" => "squat_1_overhead_press", "session_2" => "front_squat_incline_press", "session_3" => "squat_1_overhead_press" }],
          "Intensification" => ["amber", { "session_1" => "squat_2_bench_press", "session_2" => "deadlift_dip", "session_3" => "squat_2_bench_press" }]
        }.each do |phase, (color, defaults)| %>
@@ -138,8 +174,8 @@
     <% end %>
   </div>
 
-  <%# === 3x Upper/Lower === %>
-  <div data-split="3x_upper_lower" class="hidden space-y-4">
+  <%# 3x Upper/Lower %>
+  <div data-split-type="upper_lower" data-freq="3" class="hidden space-y-4">
     <% { "Accumulation" => ["teal", { "session_1" => "overhead_press", "session_2" => "squat_1", "session_3" => "overhead_press" }],
          "Intensification" => ["amber", { "session_1" => "incline_press", "session_2" => "front_squat", "session_3" => "incline_press" }]
        }.each do |phase, (color, defaults)| %>
@@ -163,8 +199,8 @@
     <% end %>
   </div>
 
-  <%# === 4x Upper/Lower (7-day) === %>
-  <div data-split="4x_upper_lower" class="space-y-4">
+  <%# 4x Upper/Lower (7-day) %>
+  <div data-split-type="upper_lower" data-freq="4" class="space-y-4">
     <% { "Accumulation" => ["teal", { "upper_body_1" => "overhead_press", "lower_body_1" => "squat_1", "upper_body_2" => "bench_press", "lower_body_2" => "front_squat" }],
          "Intensification" => ["amber", { "upper_body_1" => "incline_press", "lower_body_1" => "squat_2", "upper_body_2" => "dip", "lower_body_2" => "deadlift" }]
        }.each do |phase, (color, defaults)| %>
@@ -189,24 +225,21 @@
     <% end %>
   </div>
 
-  <%# === 4x Upper/Lower 14-day === %>
-  <div data-split="4x_upper_lower_14day" class="hidden space-y-4">
-    <div class="px-4 py-3 rounded-md border-l-3 border-blue-500 bg-blue-50 text-blue-800 text-sm mb-2">
-      14-day microcycle: Week 1 and Week 2 alternate different session structures within each mesocycle.
-    </div>
-    <% { "Week 1" => ["teal", { "upper_body_1" => "overhead_press", "lower_body_1" => "squat_1", "upper_body_2" => "bench_press", "lower_body_2" => "front_squat" }],
-         "Week 2" => ["amber", { "upper_body_3" => "incline_press", "lower_body_3" => "squat_2", "upper_body_4" => "dip", "lower_body_4" => "deadlift" }]
-       }.each do |label, (color, defaults)| %>
+  <%# 5x Upper/Lower %>
+  <div data-split-type="upper_lower" data-freq="5" class="hidden space-y-4">
+    <% { "Accumulation" => ["teal", { "upper_body_1" => "overhead_press", "lower_body_1" => "squat_1", "upper_body_2" => "bench_press", "lower_body_2" => "front_squat", "upper_body_3" => "dip" }],
+         "Intensification" => ["amber", { "upper_body_1" => "incline_press", "lower_body_1" => "squat_2", "upper_body_2" => "dip", "lower_body_2" => "deadlift", "upper_body_3" => "bench_press" }]
+       }.each do |phase, (color, defaults)| %>
       <div class="bg-white rounded-lg border border-slate-200 p-4">
         <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
-          <span class="inline-block w-3 h-3 rounded-sm bg-<%= color %>-600"></span> <%= label %>
+          <span class="inline-block w-3 h-3 rounded-sm bg-<%= color %>-600"></span> <%= phase %>
         </h3>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
           <% defaults.each do |slot, dv| %>
             <% opts = slot.include?("upper") ? ub_opts : lb_opts %>
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1"><%= slot.gsub("_3", " 1").gsub("_4", " 2").titleize %></label>
-              <select name="acc_structure[<%= slot %>]" class="<%= sc %>">
+              <label class="block text-xs font-medium text-slate-400 mb-1"><%= slot.titleize %></label>
+              <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% opts.each do |opt| %>
                   <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
@@ -218,52 +251,12 @@
     <% end %>
   </div>
 
-  <%# === 4x/5x Body Part === %>
-  <% ["4x_body_part", "5x_body_part"].each do |split_key| %>
-    <div data-split="<%= split_key %>" class="hidden space-y-4">
-      <div class="px-4 py-3 rounded-md border-l-3 border-blue-500 bg-blue-50 text-blue-800 text-sm">
-        Body part split. Select a training split below to define the weekly schedule, or the default Upper/Lower structure will be used.
-      </div>
+  <%# Body Part splits — exercises are auto-mapped from the split's session types %>
+  <div data-split-type="body_part" class="hidden space-y-4">
+    <div class="px-4 py-3 rounded-md border-l-3 border-blue-500 bg-blue-50 text-blue-800 text-sm">
+      Body part split selected. Sessions are mapped to the closest KILO templates automatically.
     </div>
-  <% end %>
-
-  <%# Training Split Selection %>
-  <% training_level = @client.training_age %>
-  <% acc_splits = KiloTrainingSplit.where(phase: :accumulation, training_level: training_level).order(:goal, :frequency) %>
-  <% int_splits = KiloTrainingSplit.where(phase: :intensification, training_level: training_level).order(:goal, :frequency) %>
-
-  <% if acc_splits.any? || int_splits.any? %>
-    <div class="bg-white rounded-lg border border-slate-200 p-4">
-      <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Training Split (Optional)</h3>
-      <p class="text-xs text-slate-400 mb-3">Override the weekly schedule with a specific split from the KILO database. Filtered for <%= training_level %> athletes.</p>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Accumulation Split</label>
-          <select name="acc_split_id" class="<%= sc %>">
-            <option value="">Default (from structure above)</option>
-            <% acc_splits.each do |split| %>
-              <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
-              <option value="<%= split.id %>">
-                <%= split.goal.titleize %> · <%= split.frequency %>x/wk (<%= struct.values.uniq.map(&:titleize).join(", ") %>)
-              </option>
-            <% end %>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Intensification Split</label>
-          <select name="int_split_id" class="<%= sc %>">
-            <option value="">Default (from structure above)</option>
-            <% int_splits.each do |split| %>
-              <% struct = split.split_structure.is_a?(String) ? JSON.parse(split.split_structure) : split.split_structure %>
-              <option value="<%= split.id %>">
-                <%= split.goal.titleize %> · <%= split.frequency %>x/wk (<%= struct.values.uniq.map(&:titleize).join(", ") %>)
-              </option>
-            <% end %>
-          </select>
-        </div>
-      </div>
-    </div>
-  <% end %>
+  </div>
 
   <div class="flex items-center gap-3 pt-4">
     <input type="submit" value="Generate Program" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors" data-turbo-submits-with="Generating...">
@@ -272,30 +265,107 @@
 <% end %>
 
 <script>
-function updateFormSections() {
-  const select = document.getElementById('split-type-select');
-  const value = select.value;
+const ALL_SPLITS = <%= raw splits_json %>;
 
-  // Update hidden frequency
-  const freqMap = {
-    '2x_full_body': 2, '3x_full_body': 3, '3x_upper_lower': 3,
-    '4x_upper_lower': 4, '4x_upper_lower_14day': 4, '4x_body_part': 4,
-    '5x_body_part': 5
+function updateTrainingSplits() {
+  const goal = document.getElementById('goal-select').value;
+  const freq = parseInt(document.getElementById('frequency-select').value);
+
+  updateSplitDropdown('acc-split-select', 'acc-split-preview', goal, 'accumulation', freq);
+  updateSplitDropdown('int-split-select', 'int-split-preview', goal, 'intensification', freq);
+  updateStructureSections();
+}
+
+function updateSplitDropdown(selectId, previewId, goal, phase, freq) {
+  const select = document.getElementById(selectId);
+  const preview = document.getElementById(previewId);
+
+  // Get ALL splits for this phase + frequency (not restricted by goal)
+  let allForFreq = ALL_SPLITS.filter(s => s.phase === phase && s.frequency === freq);
+
+  // Deduplicate by name (same split name at same freq = same structure)
+  const seen = new Map();
+  allForFreq.forEach(s => {
+    const key = s.name + '|' + s.frequency;
+    if (!seen.has(key)) seen.set(key, s);
+  });
+  const uniqueSplits = Array.from(seen.values());
+
+  // Find the default for this goal (exact goal + phase + freq match)
+  let defaultSplit = ALL_SPLITS.find(s => s.goal === goal && s.phase === phase && s.frequency === freq);
+
+  // If no exact match, try closest lower frequency for the default
+  if (!defaultSplit) {
+    for (let f = freq - 1; f >= 2; f--) {
+      defaultSplit = ALL_SPLITS.find(s => s.goal === goal && s.phase === phase && s.frequency === f);
+      if (defaultSplit) break;
+    }
+  }
+
+  select.innerHTML = '';
+
+  if (uniqueSplits.length === 0 && !defaultSplit) {
+    select.innerHTML = '<option value="">No splits available</option>';
+    preview.textContent = '';
+    return;
+  }
+
+  // Add "Default" option first
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '';
+  defaultOpt.textContent = defaultSplit
+    ? `Default: ${defaultSplit.name} — ${defaultSplit.frequency}x/wk`
+    : 'Default (auto)';
+  defaultOpt.dataset.summary = defaultSplit ? defaultSplit.summary : '';
+  defaultOpt.selected = true;
+  select.appendChild(defaultOpt);
+
+  // Add all available splits as override options
+  uniqueSplits.forEach(split => {
+    const opt = document.createElement('option');
+    opt.value = split.id;
+    opt.textContent = split.display;
+    opt.dataset.summary = split.summary;
+    select.appendChild(opt);
+  });
+
+  updateSplitPreview(selectId, previewId);
+  select.onchange = function() {
+    updateSplitPreview(selectId, previewId);
+    updateStructureSections();
   };
-  document.getElementById('frequency-hidden').value = freqMap[value] || 4;
+}
 
-  // Update microcycle length display
-  const lengthDisplay = document.getElementById('microcycle-length-display');
-  lengthDisplay.textContent = value === '4x_upper_lower_14day' ? '14 days (2 weeks)' : '7 days (1 week)';
+function updateSplitPreview(selectId, previewId) {
+  const select = document.getElementById(selectId);
+  const preview = document.getElementById(previewId);
+  const selected = select.options[select.selectedIndex];
+  preview.textContent = selected ? (selected.dataset.summary || '') : '';
+}
 
-  // Show/hide sections
-  document.querySelectorAll('[data-split]').forEach(el => {
-    el.classList.toggle('hidden', el.dataset.split !== value);
+function updateStructureSections() {
+  const freq = parseInt(document.getElementById('frequency-select').value);
+
+  // Determine split type from the accumulation split selection
+  const accSelect = document.getElementById('acc-split-select');
+  const selectedOpt = accSelect.options[accSelect.selectedIndex];
+  const splitLabel = selectedOpt ? selectedOpt.textContent : '';
+
+  let splitType = 'upper_lower'; // default
+  if (splitLabel.includes('Full Body')) splitType = 'full_body';
+  else if (splitLabel.includes('Body Part')) splitType = 'body_part';
+
+  // Show/hide structure sections
+  document.querySelectorAll('[data-split-type]').forEach(el => {
+    const typeMatch = el.dataset.splitType === splitType;
+    const freqAttr = el.dataset.freq;
+    const freqMatch = !freqAttr || parseInt(freqAttr) === freq;
+    el.classList.toggle('hidden', !(typeMatch && freqMatch));
   });
 
   // Disable hidden selects so they don't submit
-  document.querySelectorAll('[data-split] select').forEach(el => {
-    el.disabled = el.closest('[data-split]').classList.contains('hidden');
+  document.querySelectorAll('[data-split-type] select').forEach(el => {
+    el.disabled = el.closest('[data-split-type]').classList.contains('hidden');
   });
 }
 
@@ -307,9 +377,9 @@ function updateTotalWeeks() {
   if (el) el.textContent = `Total: ${weeks} weeks`;
 }
 
-// Attach week listeners
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-  updateFormSections();
+  updateTrainingSplits();
   updateTotalWeeks();
   document.querySelectorAll('[name$="_weeks"]').forEach(el =>
     el.addEventListener('change', updateTotalWeeks));

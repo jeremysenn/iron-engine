@@ -118,7 +118,9 @@ class Kilo::SessionGenerator
         sets: sets,
         target_reps: reps.to_s,
         tempo: slot[:tempo],
-        rest_seconds: Kilo::RestCalculator.for(slot[:position], phase: phase)
+        rest_seconds: Kilo::RestCalculator.for(slot[:position], phase: phase, template_rest: slot[:rest]),
+        group: slot[:group],
+        group_type: slot[:group_type]
       }
     end
   end

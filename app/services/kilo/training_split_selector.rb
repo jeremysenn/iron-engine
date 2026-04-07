@@ -28,8 +28,11 @@ class Kilo::TrainingSplitSelector
       raise SplitNotFound, "No training split found for #{goal}/#{phase}/#{training_level}/#{frequency}x per week"
     end
 
+    struct = split.split_structure
+    struct = JSON.parse(struct) if struct.is_a?(String)
+
     result = SplitBlueprint.new(
-      split_structure: split.split_structure,
+      split_structure: struct,
       frequency: frequency
     )
 
@@ -37,7 +40,7 @@ class Kilo::TrainingSplitSelector
       step: "training_split_selection",
       rule: "Goal + phase + level + frequency → split",
       value: "#{goal} / #{phase} / #{training_level} / #{frequency}x week",
-      decision: "Split: #{split.split_structure.values.join(', ')}"
+      decision: "#{split.name}: #{struct.values.join(', ')}"
     )
 
     result

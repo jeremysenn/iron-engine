@@ -4,6 +4,8 @@ class SessionExercise < ApplicationRecord
 
   has_many :exercise_sets, dependent: :destroy
 
+  enum :group_type, { superset: 0, triset: 1, giant_set: 2, straight_set: 3, post_exhaustion: 4, heavy_light: 5 }
+
   validates :position, presence: true
   validates :sets, presence: true, numericality: { greater_than: 0 }
   validates :rest_seconds, presence: true, numericality: { greater_than_or_equal_to: 0 }

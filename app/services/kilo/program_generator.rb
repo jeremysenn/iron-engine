@@ -93,8 +93,10 @@ class Kilo::ProgramGenerator
       coach_split = is_acc ? @acc_split : @int_split
 
       split_result = if coach_split
+        cs_struct = coach_split.split_structure
+        cs_struct = JSON.parse(cs_struct) if cs_struct.is_a?(String)
         result = Kilo::TrainingSplitSelector::SplitBlueprint.new(
-          split_structure: coach_split.split_structure, frequency: coach_split.frequency
+          split_structure: cs_struct, frequency: coach_split.frequency
         )
         result.annotate(step: "training_split_selection", rule: "Coach-selected split",
           value: "#{coach_split.goal.titleize} / #{coach_split.training_level.capitalize} / #{coach_split.frequency}x",
@@ -120,9 +122,14 @@ class Kilo::ProgramGenerator
         # seed_phase maps mesocycle position to the correct row in seed data
         rep_scheme_record = model_result.rep_schemes.find_by(phase: meso[:seed_phase])
 
-        # Select microcycle structure based on phase
-        is_acc = meso[:phase] == :accumulation
-        current_structure = is_acc ? @acc_structure : @int_structure
+        # Select microcycle structure: coach override wins, otherwise alternate per PD Resource
+        global_week = meso[:week_start] + week_num - 1
+        current_structure = if @acc_structure != Kilo::MicrocycleStructures::DEFAULT_ACC || @int_structure != Kilo::MicrocycleStructures::DEFAULT_INT
+          # Coach provided custom structure — use phase-based selection
+          meso[:phase] == :accumulation ? @acc_structure : @int_structure
+        else
+          Kilo::MicrocycleStructures.for_week(frequency, global_week)
+        end
 
         session_result = @session_generator.call(
           split_structure: split_result&.split_structure || default_split(frequency),
@@ -252,7 +259,9 @@ class Kilo::ProgramGenerator
                 position: ex_data[:position],
                 sets: [sets_count, 1].max,
                 tempo: ex_data[:tempo],
-                rest_seconds: ex_data[:rest_seconds] || 60
+                rest_seconds: ex_data[:rest_seconds] || 60,
+                group: ex_data[:group],
+                group_type: ex_data[:group_type]
               )
 
               [sets_count, 1].max.times do |i|

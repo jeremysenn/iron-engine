@@ -1,12 +1,12 @@
 <%= page_header @client.full_name do %>
   <div class="flex items-center gap-3">
-    <%= btn_primary "Regenerate", new_client_program_path(@client) %>
+    <%= btn_primary "Regenerate", new_client_program_path(@client, goal: @program.goal, frequency: @program.frequency, volume: @program.volume) %>
     <%= btn_secondary "Back to Client", client_path(@client) %>
   </div>
 <% end %>
 
 <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-6">
-  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · Model <%= @program.periodization_model %> · <%= @program.frequency %>x/week
+  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · <%= @program.volume.capitalize %> Volume · Model <%= @program.periodization_model %> · <%= @program.frequency %>x/week
 </div>
 
 <%# Macrocycle Timeline %>
@@ -81,6 +81,13 @@
                       <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">
                         <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
                       </span>
+                      <% training_method = session.session_exercises.find_by("group_type IS NOT NULL")&.group_type %>
+                      <% if training_method %>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded font-medium
+                          <%= mesocycle.accumulation? ? 'bg-teal-100 text-teal-700' : 'bg-amber-100 text-amber-700' %>">
+                          <%= training_method.titleize.gsub("Post Exhaustion", "Post-Exhaustion") %>
+                        </span>
+                      <% end %>
                       <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]">~<%= session.estimated_duration %></span>
                     </div>
                     <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>

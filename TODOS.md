@@ -23,6 +23,18 @@ per coach with 15 clients.
 **Context:** Design doc Phase 1. Port billing patterns (not code) from old syd_api. Stripe API
 has changed since Rails 4 era. Consider a `billing_status` field on User model.
 
+### Body Composition Goal + GBC Templates
+**What:** Add `body_composition` as a goal enum value with Full Body GBC (German Body Comp)
+templates from the KILO Training Split Database.
+**Why:** Covers another goal type. Deferred from the body part template plan because it's a
+cross-cutting concern (touches split selection, rep schemes, rest periods, periodization model,
+and phase structure). Needs its own periodization model rows in the seed data.
+**Effort:** M (human: ~1 week / CC: ~30 min)
+**Depends on:** Body part template system complete
+**Context:** The Training Split Database PDF has a dedicated Body Composition section with Full
+Body sessions that alternate upper/lower exercises for peripheral heart action. Run /office-hours
+to scope this properly before implementation.
+
 ## P2 — Post-MVP polish
 
 ### PDF Export

@@ -30,7 +30,8 @@ module Kilo::RestCalculator
     "D"  => 60,  "D1" => 60,  "D2" => 60
   }.freeze
 
-  def self.for(position, phase: :accumulation)
+  def self.for(position, phase: :accumulation, template_rest: nil)
+    return template_rest if template_rest
     table = phase.to_s.include?("intensification") ? INTENSIFICATION : ACCUMULATION
     table[position.to_s] || 60
   end

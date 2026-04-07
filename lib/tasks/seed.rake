@@ -45,6 +45,14 @@ namespace :seed do
           )
         when "kilo_training_methods"
           model_class.find_or_initialize_by(name: attrs[:name])
+        when "kilo_training_splits"
+          model_class.find_or_initialize_by(
+            goal: attrs[:goal],
+            phase: attrs[:phase],
+            training_level: attrs[:training_level],
+            frequency: attrs[:frequency],
+            name: attrs[:name]
+          )
         else
           model_class.new
         end
