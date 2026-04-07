@@ -37,11 +37,11 @@
       </div>
     <% end %>
   </div>
-  <div class="flex mt-0.5">
+  <div class="flex mt-1 gap-2">
     <% mesocycles.each_slice(2) do |pair| %>
       <% block_num = (block_num || 0) + 1 %>
       <% pair_weeks = pair.sum { |m| m.microcycles.count } %>
-      <div class="text-center text-[10px] font-medium text-slate-500 border-t border-slate-200 pt-1" style="flex: <%= pair_weeks %>">
+      <div class="text-center text-[10px] font-semibold text-slate-600 border border-slate-300 rounded px-2 py-1 bg-slate-50" style="flex: <%= pair_weeks %>">
         Block <%= block_num %>
       </div>
     <% end %>
