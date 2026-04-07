@@ -35,6 +35,22 @@ and phase structure). Needs its own periodization model rows in the seed data.
 Body sessions that alternate upper/lower exercises for peripheral heart action. Run /office-hours
 to scope this properly before implementation.
 
+### Complete Exercise Database Re-transcription
+**What:** Re-transcribe the entire KILO Exercise Database PDF (45 pages, ~1,100+ exercises)
+into the seed CSV. The current seeding missed base/category exercises (e.g., "Overhead Press",
+"Squat", "Deadlift" as standalone entries) and may have other gaps. The PDF is the source of
+truth — every exercise listed should exist in the database exactly as named.
+**Why:** The exercise list in the app must be a 1:1 match with the KILO Exercise Database PDF.
+Missing exercises break exercise linking in generated programs and erode coach trust.
+**Effort:** L (human: ~1 week / CC: ~2 hours — systematic page-by-page PDF audit)
+**Priority:** P1
+**Depends on:** Nothing — can be done independently
+**Context:** The current CSV has ~1,090 exercises. The PDF likely has ~1,100-1,200. A diff
+against the PDF will reveal missing entries, misspelled names, and incorrect categorization.
+Approach: read each PDF page, extract every exercise name, compare against DB, add missing
+ones with correct body_region/category/subcategory. Assign video URLs from sibling exercises
+in the same category where possible.
+
 ## P2 — Post-MVP polish
 
 ### PDF Export
