@@ -1,0 +1,56 @@
+<tr id="<%= dom_id(se) %>" class="border-b border-slate-100
+  <%= se.position.start_with?('A') ? 'border-l-2 border-l-teal-500' : '' %>
+  <%= se.position.start_with?('B') ? 'border-l-2 border-l-slate-300' : '' %>">
+  <td class="px-2 py-1.5 font-['JetBrains_Mono',monospace] text-xs text-slate-400"><%= se.position %></td>
+  <td class="px-2 py-1.5 font-medium">
+    <div class="flex items-center gap-1.5">
+      <% if se.map_adjusted? %>
+        <span class="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-semibold bg-teal-100 text-teal-700" title="MAP Assessment identified this movement for regression/progression">MAP</span>
+      <% end %>
+      <% if program.optimizing_strength_ratios? && se.kilo_exercise&.subcategory == "Training Method" %>
+        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-black bg-slate-800 text-white tracking-widest" title="OSR training method exercise">OSR</span>
+      <% end %>
+      <% if se.kilo_exercise_id %>
+        <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "text-slate-700 hover:text-teal-600" %>
+      <% else %>
+        <span class="text-slate-700"><%= se.exercise_name %></span>
+      <% end %>
+      <button type="button"
+        onclick="openSwapModal('<%= se.id %>', '<%= j se.exercise_name %>', '<%= se.position %>', '<%= client_session_exercise_path(client, se) %>')"
+        style="color: #cbd5e1;"
+        onmouseover="this.style.color='#0d9488'"
+        onmouseout="this.style.color='#cbd5e1'"
+        title="Swap exercise">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+        </svg>
+      </button>
+    </div>
+  </td>
+  <td class="px-2 py-1.5 text-right">
+    <input type="number" value="<%= se.sets %>" min="1" max="20"
+      class="w-10 text-right font-['JetBrains_Mono',monospace] text-sm bg-transparent border-0 border-b border-transparent hover:border-slate-300 focus:border-teal-500 focus:ring-0 p-0"
+      onchange="patchExercise('<%= client_session_exercise_path(client, se) %>', {sets: this.value})">
+  </td>
+  <td class="px-2 py-1.5 text-right">
+    <% all_reps = se.exercise_sets.order(:set_number).map(&:target_reps)
+       reps_display = all_reps.uniq.size <= 1 ? (all_reps.first || 0).to_s : all_reps.join(",") %>
+    <input type="text" value="<%= reps_display %>"
+      class="<%= reps_display.include?(',') ? 'w-24' : 'w-10' %> text-right font-['JetBrains_Mono',monospace] text-sm bg-transparent border-0 border-b border-transparent hover:border-slate-300 focus:border-teal-500 focus:ring-0 p-0"
+      onchange="patchExercise('<%= client_session_exercise_path(client, se) %>', {reps: this.value})">
+  </td>
+  <td class="px-2 py-1.5 text-right">
+    <% tempo_parts = (se.tempo || "4-0-1-0").split("-") %>
+    <span style="white-space:nowrap; font-family:'JetBrains Mono',monospace; font-size:0.875rem; color:#64748b;" data-exercise-url="<%= client_session_exercise_path(client, se) %>" data-tempo-group="<%= se.id %>"><% tempo_parts.each_with_index do |part, i| %><% if i > 0 %>-<% end %><input type="text" value="<%= part %>" maxlength="<%= [part.length, 2].max %>"
+        style="width:<%= [part.length, 1].max %>ch; text-align:center; font:inherit; color:inherit; background:transparent; border:none; border-bottom:1px solid transparent; padding:0; outline:none;"
+        onfocus="this.select(); this.style.borderBottomColor='#0d9488'"
+        onblur="this.style.borderBottomColor='transparent'; saveTempo(this)"
+        data-tempo-index="<%= i %>" data-exercise-id="<%= se.id %>"
+        onkeydown="tempoNav(event, this)"><% end %></span>
+  </td>
+  <td class="px-2 py-1.5 text-right whitespace-nowrap">
+    <input type="number" value="<%= se.rest_seconds %>" min="0" max="600" step="10"
+      class="w-10 text-right font-['JetBrains_Mono',monospace] text-sm text-slate-500 bg-transparent border-0 border-b border-transparent hover:border-slate-300 focus:border-teal-500 focus:ring-0 p-0"
+      onchange="patchExercise('<%= client_session_exercise_path(client, se) %>', {rest_seconds: this.value})"><span class="text-slate-400 text-xs">s</span>
+  </td>
+</tr>

@@ -1,0 +1,102 @@
+<div class="flex items-center justify-between mb-1">
+  <h1 class="font-['Satoshi',system-ui,sans-serif] font-bold text-2xl tracking-tight">
+    <%= @session.template_name %>
+  </h1>
+  <a href="<%= shared_path(@share_token.token) %>"
+     class="inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-slate-700 border border-slate-300 hover:bg-slate-100 transition-colors">
+    Back
+  </a>
+</div>
+
+<div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-6">
+  Week <%= @session.microcycle.week_number %> ·
+  <%= %w[Monday Tuesday Wednesday Thursday Friday Saturday Sunday][@session.day] || "Day #{@session.day}" %>
+  · ~<%= @session.estimated_duration %>
+</div>
+
+<%# Video demo modals %>
+<% @exercises.each do |se| %>
+  <% if se.kilo_exercise&.video_url.present? %>
+    <div id="video-<%= se.id %>" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60" onclick="if(event.target===this){this.classList.add('hidden');this.querySelector('iframe').src=this.querySelector('iframe').src}">
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 overflow-hidden" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+          <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+          <button onclick="var m=this.closest('[id^=video]');m.classList.add('hidden');m.querySelector('iframe').src=m.querySelector('iframe').src" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="aspect-video">
+          <iframe src="https://www.youtube.com/embed/<%= youtube_video_id(se.kilo_exercise.video_url) %>" class="w-full h-full" frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+
+<%# Workout logging form %>
+<%= form_with url: shared_workout_path(@share_token.token, @session), method: :patch, class: "space-y-6" do |f| %>
+  <div class="flex items-center gap-3">
+    <label class="text-sm font-medium text-slate-600">Date</label>
+    <input type="date" name="completed_at" value="<%= @session.completed_at || Date.current %>"
+           class="px-3 py-1.5 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+  </div>
+
+  <% @exercises.each do |se| %>
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
+            <% if se.kilo_exercise&.video_url.present? %>
+              <button type="button" onclick="document.getElementById('video-<%= se.id %>').classList.remove('hidden')" class="shrink-0" title="Watch demo">
+                <img src="<%= youtube_thumbnail(se.kilo_exercise.video_url) %>" alt="" class="w-10 h-7 rounded object-cover hover:ring-2 hover:ring-teal-500" loading="lazy">
+              </button>
+            <% end %>
+            <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
+          </div>
+          <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= se.tempo %> · <%= se.rest_seconds %>s</span>
+        </div>
+      </div>
+
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-slate-100">
+            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5 w-16">Set</th>
+            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Target</th>
+            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Weight</th>
+            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Reps</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% se.exercise_sets.order(:set_number).each do |set| %>
+            <tr class="border-b border-slate-50">
+              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-sm text-slate-400"><%= set.set_number %></td>
+              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-xs text-slate-400">
+                <%= set.target_reps %> reps<% if set.target_weight.to_f > 0 %> <span class="text-slate-500">@ <%= set.target_weight.to_i %></span><% end %>
+              </td>
+              <td class="text-center py-2 px-2">
+                <input type="number" step="0.5" min="0"
+                       name="sets[<%= set.id %>][actual_weight]"
+                       value="<%= set.actual_weight if set.actual_weight.to_f > 0 %>"
+                       placeholder="—"
+                       class="w-24 mx-auto block text-center px-2 py-1.5 rounded border border-slate-200 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1 <%= set.actual_weight.to_f > 0 ? 'bg-teal-50 border-teal-200' : '' %>">
+              </td>
+              <td class="text-center py-2 px-2">
+                <input type="number" min="0"
+                       name="sets[<%= set.id %>][actual_reps]"
+                       value="<%= set.actual_reps if set.actual_reps.to_i > 0 %>"
+                       placeholder="—"
+                       class="w-20 mx-auto block text-center px-2 py-1.5 rounded border border-slate-200 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1 <%= set.actual_reps.to_i > 0 ? 'bg-teal-50 border-teal-200' : '' %>">
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <div class="pt-2">
+    <input type="submit" value="Save Workout" class="w-full px-5 py-3 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors">
+  </div>
+<% end %>

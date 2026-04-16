@@ -1,18 +1,13 @@
-class WorkoutsController < ApplicationController
-  include Scopeable
-
-  before_action :find_client
+class Shared::WorkoutsController < SharedController
   before_action :find_session
 
-  # GET /clients/:client_id/workouts/:training_session_id
-  # Shows the workout logging form for a specific training session
+  # GET /s/:token/workouts/:id
   def show
     @exercises = @session.session_exercises.includes(:exercise_sets, :kilo_exercise).order(:position)
     @program = @session.microcycle.mesocycle.macrocycle.program
   end
 
-  # PATCH /clients/:client_id/workouts/:training_session_id
-  # Saves actual weight and reps for all sets
+  # PATCH /s/:token/workouts/:id
   def update
     @session.update!(completed_at: params[:completed_at]) if params[:completed_at].present?
 
@@ -26,15 +21,15 @@ class WorkoutsController < ApplicationController
       )
     end
 
-    # Recalculate suggested weights for future sessions based on what was just logged
     Kilo::LoadingSchemeCalculator.new.recalculate_after_logging(@session)
 
-    redirect_to client_workout_path(@client, @session), notice: "Workout saved."
+    redirect_to shared_workout_path(@share_token.token, @session), notice: "Workout saved."
   end
 
   private
 
   def find_session
+    # Ensure the session belongs to this client's programs
     @session = TrainingSession.joins(microcycle: { mesocycle: { macrocycle: :program } })
       .where(programs: { client_id: @client.id })
       .find(params[:id])

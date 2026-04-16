@@ -3,7 +3,7 @@ class Program < ApplicationRecord
 
   has_many :macrocycles, dependent: :destroy
 
-  enum :goal, { hypertrophy: 0, absolute_strength: 1, relative_strength: 2, power: 3, balanced: 4 }
+  enum :goal, { hypertrophy: 0, absolute_strength: 1, relative_strength: 2, power: 3, balanced: 4, optimizing_strength_ratios: 5 }
   enum :training_level, { novice: 0, intermediate: 1, advanced: 2 }
   enum :volume, { low: 0, medium: 1, high: 2 }
   enum :status, { active: 0, archived: 1 }
@@ -23,6 +23,7 @@ class Program < ApplicationRecord
   validates :volume, presence: true
   validates :frequency, presence: true, inclusion: { in: 2..4 }
   validates :status, presence: true
+  validates :macrocycle_number, presence: true, inclusion: { in: 1..16 }
 
   scope :with_full_structure, -> {
     includes(macrocycles: { mesocycles: { microcycles: { training_sessions: { session_exercises: [:exercise_sets, :kilo_exercise] } } } })
@@ -30,5 +31,9 @@ class Program < ApplicationRecord
 
   def archive!
     update!(status: :archived, archived_at: Time.current)
+  end
+
+  def map_applied?
+    generation_metadata&.dig("map_applied") == true
   end
 end

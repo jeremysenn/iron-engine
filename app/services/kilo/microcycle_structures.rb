@@ -96,14 +96,18 @@ module Kilo::MicrocycleStructures
     params.to_unsafe_h.stringify_keys
   end
 
-  def self.defaults_for(phase, frequency = 4)
-    # For backward compat — returns Micro 1 for accumulation, Micro 2 for intensification
+  def self.defaults_for(phase, frequency = 4, split_type: nil)
     is_acc = !phase.to_s.include?("intensification")
     case frequency.to_i
     when 2
       is_acc ? MICRO_1_2X : MICRO_2_2X
     when 3
-      is_acc ? MICRO_1_3X : MICRO_2_3X
+      if split_type == "full_body"
+        is_acc ? MICRO_1_3X_FB : MICRO_2_3X_FB
+      else
+        # 3x Upper/Lower uses the same 4x microcycle structure
+        is_acc ? MICRO_1_4X : MICRO_2_4X
+      end
     else
       is_acc ? MICRO_1_4X : MICRO_2_4X
     end
@@ -121,6 +125,41 @@ module Kilo::MicrocycleStructures
       "deadlift_dip" => "Deadlift & Dip"
     }
     labels[key.to_s] || key.to_s.titleize
+  end
+
+  # 3x/week Upper/Lower rotation: the 4 workouts from the 4x split
+  # cycle through 3 slots per week.
+  #
+  #   Week 1: UB1, LB1, UB2
+  #   Week 2: LB2, UB1, LB1
+  #   Week 3: UB2, LB2, UB1
+  #   Week 4: LB1, UB2, LB2  (repeats)
+  #
+  DAYS_3X = %w[mon wed fri].freeze
+
+  def self.three_day_upper_lower_split(week_number)
+    sequence = %w[upper_body_1 lower_body_1 upper_body_2 lower_body_2]
+    start = ((week_number - 1) * 3) % 4
+    sessions = (0..2).map { |i| sequence[(start + i) % 4] }
+    DAYS_3X.zip(sessions).to_h
+  end
+
+  # 3x/week Full Body split (PD Resource p.14):
+  # 2 microcycles alternating, 3 full body sessions per week.
+  MICRO_1_3X_FB = {
+    "full_body_1" => "squat_1_overhead_press",
+    "full_body_2" => "front_squat_incline_press",
+    "full_body_3" => "squat_2_bench_press"
+  }.freeze
+
+  MICRO_2_3X_FB = {
+    "full_body_1" => "deadlift_dip",
+    "full_body_2" => "squat_1_overhead_press",
+    "full_body_3" => "front_squat_incline_press"
+  }.freeze
+
+  def self.three_day_full_body_split
+    { "mon" => "full_body_1", "wed" => "full_body_2", "fri" => "full_body_3" }
   end
 
   def self.upper_body_label(key) = label_for(key)

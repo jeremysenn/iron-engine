@@ -2,7 +2,7 @@ class MapAssessmentsController < ApplicationController
   include Scopeable
 
   before_action :find_client
-  before_action :find_assessment, only: %i[show]
+  before_action :find_assessment, only: %i[show edit update]
 
   MOVEMENT_PATTERNS = {
     lower_body: [
@@ -15,14 +15,16 @@ class MapAssessmentsController < ApplicationController
       { key: "ankle_dorsiflexion", name: "Ankle Dorsiflexion", levels: 0, test: "Weight Bearing Lunge" }
     ],
     upper_body: [
-      { key: "dip", name: "Dip", levels: 3 },
-      { key: "chin_up", name: "Chin-Up", levels: 3 },
+      { key: "dip", name: "Dip", levels: 0, test: "Dip",
+        fail_types: [["rom", "Fail - ROM"], ["scapular", "Fail - Scapular"]] },
+      { key: "chin_up", name: "Chin-Up", levels: 0, test: "Chin-Up - Medium Grip - Semi-Supinated" },
       { key: "overhead_press", name: "Overhead Press", levels: 3 },
       { key: "row", name: "Row", levels: 3 },
       { key: "push_up", name: "Push-Up", levels: 3 },
-      { key: "external_rotation", name: "External Rotation", levels: 3 },
-      { key: "trap_3_raise", name: "Trap 3 Raise", levels: 3 },
-      { key: "prone_lateral_raise", name: "Prone Lateral Raise", levels: 3 }
+      { key: "external_rotation", name: "External Rotation", levels: 0, test: "External Rotation - Seated - Arm at 45°",
+        fail_types: [["external_rom", "Fail - External Rotation ROM"], ["internal_rom", "Fail - Internal Rotation ROM"], ["both_rom", "Fail - External and Internal Rotation ROM"]] },
+      { key: "trap_3_raise", name: "Trap 3 Raise", levels: 0, test: "Trap 3 Raise - Prone - 15° Incline - One-Arm" },
+      { key: "prone_lateral_raise", name: "Prone Lateral Raise", levels: 0, test: "Lateral Raise - Prone - 15° Incline - Neutral - One-Arm" }
     ]
   }.freeze
 
@@ -35,17 +37,7 @@ class MapAssessmentsController < ApplicationController
     @assessment = @client.map_assessments.build(assessed_at: Time.current)
 
     if @assessment.save
-      patterns_params.each do |key, attrs|
-        attrs = attrs.symbolize_keys
-        next if attrs[:level].blank? && attrs[:passed].blank?
-
-        @assessment.map_progressions.create!(
-          movement_pattern: key,
-          level: attrs[:level].present? ? attrs[:level].to_i : 0,
-          passed: attrs[:passed] == "1",
-          exercise_name: attrs[:exercise_name]
-        )
-      end
+      save_progressions(@assessment)
 
       # Run MAP engine
       engine = Kilo::MapAssessmentEngine.new
@@ -65,6 +57,23 @@ class MapAssessmentsController < ApplicationController
     @complete = @assessment.complete?
   end
 
+  def edit
+    @progressions_by_key = @assessment.map_progressions.index_by(&:movement_pattern)
+    @patterns = MOVEMENT_PATTERNS
+  end
+
+  def update
+    @assessment.map_progressions.destroy_all
+    save_progressions(@assessment)
+
+    # Re-run MAP engine
+    engine = Kilo::MapAssessmentEngine.new
+    engine.call(@assessment.reload)
+
+    redirect_to client_map_assessment_path(@client, @assessment),
+      notice: "MAP Assessment updated. #{@assessment.map_progressions.count} patterns recorded."
+  end
+
   private
 
   def find_assessment
@@ -73,5 +82,37 @@ class MapAssessmentsController < ApplicationController
 
   def patterns_params
     params.fetch(:patterns, {}).permit!.to_h
+  end
+
+  # Parses form params and creates map_progressions.
+  # Handles three input types:
+  #   - Leveled patterns: level dropdown + pass checkbox (passed = "0" or "1")
+  #   - Fail-type patterns: dropdown with "1" (pass), "fail_rom", "fail_scapular", etc.
+  #   - Simple pass/fail: checkbox (passed = "0" or "1")
+  def save_progressions(assessment)
+    patterns_params.each do |key, attrs|
+      attrs = attrs.symbolize_keys
+      passed_val = attrs[:passed].to_s
+
+      # Skip if not tested
+      next if passed_val.blank? && attrs[:level].blank?
+      next if passed_val == "" # "Not tested" selected in fail_type dropdown
+
+      # Determine passed/fail and optional fail type
+      if passed_val.start_with?("fail_")
+        passed = false
+        fail_type = passed_val.delete_prefix("fail_")
+      else
+        passed = passed_val == "1"
+        fail_type = nil
+      end
+
+      assessment.map_progressions.create!(
+        movement_pattern: key,
+        level: attrs[:level].present? ? attrs[:level].to_i : 0,
+        passed: passed,
+        exercise_name: fail_type
+      )
+    end
   end
 end

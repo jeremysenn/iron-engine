@@ -12,8 +12,9 @@ class TrainingSession < ApplicationRecord
     arms_and_shoulders: 13, chest_and_back: 14, lower_body: 15, posterior_chain: 16,
     squat_1_overhead_press: 17, front_squat_incline_press: 18,
     squat_2_bench_press: 19, deadlift_dip: 20,
-    full_body_1: 21, full_body_2: 22,
-    chest_and_arms: 23, back_and_shoulders: 24, chest: 25, back: 26
+    full_body_1: 21, full_body_2: 22, full_body_3: 27,
+    chest_and_arms: 23, back_and_shoulders: 24, chest: 25, back: 26,
+    overhead_press_variation: 28, squat_2_front_squat_a: 29
   }
 
   validates :day, presence: true
@@ -25,6 +26,12 @@ class TrainingSession < ApplicationRecord
 
   def template_name
     template&.dig(:name) || session_type.titleize
+  end
+
+  def logged?
+    session_exercises.joins(:exercise_sets)
+      .where("exercise_sets.actual_weight > 0")
+      .exists?
   end
 
   def estimated_duration_seconds

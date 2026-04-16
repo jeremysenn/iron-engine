@@ -29,7 +29,11 @@
             </span>
           </td>
           <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm text-slate-500">
-            <%= client.active_program ? "#{client.active_program.goal.titleize} · Model #{client.active_program.periodization_model}" : "—" %>
+            <% if (ap = client.active_program) %>
+              <%= ap.goal.titleize %> · <%= ap.training_level.capitalize %> · <%= ap.volume.capitalize %> Volume · Model <%= ap.periodization_model %> · <%= ap.split_type&.titleize || "Upper / Lower" %> · <%= ap.frequency %>x/week
+            <% else %>
+              —
+            <% end %>
           </td>
           <td class="px-4 py-3 text-right">
             <%= link_to "View", client, class: "text-sm text-teal-600 hover:text-teal-700" %>

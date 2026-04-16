@@ -75,7 +75,7 @@ module RadarChartHelper
     end
 
     content_tag(:svg, width: size, height: size, viewBox: "0 0 #{size} #{size}",
-                class: "inline-block") do
+                style: "overflow: visible", class: "inline-block") do
       parts = []
 
       # Grid rings

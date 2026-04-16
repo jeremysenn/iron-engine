@@ -2,13 +2,15 @@
 #
 # From KILO methodology:
 #   Accumulation phases (higher volume, lower intensity):
-#     A series: 180 seconds
+#     A (straight set): 180 seconds
+#     A1/A2 (superset): 90 seconds between exercises
 #     B1/B2 (superset): 75 seconds between exercises
 #     B (single): 150 seconds
 #     C1/C2: 60 seconds
 #
 #   Intensification phases (lower volume, higher intensity):
-#     A series: 240 seconds
+#     A (straight set): 240 seconds
+#     A1/A2 (superset): 120 seconds between exercises
 #     B1/B2 (superset): 90 seconds between exercises
 #     B (single): 180 seconds
 #     C1/C2: 60 seconds
@@ -17,14 +19,14 @@
 #
 module Kilo::RestCalculator
   ACCUMULATION = {
-    "A"  => 180, "A1" => 180, "A2" => 180,
+    "A"  => 180, "A1" => 90,  "A2" => 90,
     "B"  => 150, "B1" => 75,  "B2" => 75,
     "C"  => 60,  "C1" => 60,  "C2" => 60,
     "D"  => 60,  "D1" => 60,  "D2" => 60
   }.freeze
 
   INTENSIFICATION = {
-    "A"  => 240, "A1" => 240, "A2" => 240,
+    "A"  => 240, "A1" => 120, "A2" => 120,
     "B"  => 180, "B1" => 90,  "B2" => 90,
     "C"  => 60,  "C1" => 60,  "C2" => 60,
     "D"  => 60,  "D1" => 60,  "D2" => 60

@@ -1,0 +1,65 @@
+<div class="space-y-6">
+  <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2">Lower Body</h3>
+
+  <% %i[squat front_squat deadlift].each do |exercise| %>
+    <% lift = existing_lifts[exercise] %>
+    <% hint = logged_hints[exercise] %>
+    <div>
+      <div class="grid grid-cols-[200px_1fr_1fr] gap-4 items-center">
+        <label class="text-sm font-medium text-slate-700">
+          <%= exercise.to_s.titleize %>
+          <% if %i[squat].include?(exercise) %><span class="text-red-500">*</span><% end %>
+        </label>
+        <div>
+          <input type="number" name="lifts[<%= exercise %>][weight]" step="0.1" min="0"
+                 value="<%= lift&.weight %>"
+                 placeholder="Weight"
+                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+        </div>
+        <div>
+          <input type="number" name="lifts[<%= exercise %>][reps]" min="1"
+                 value="<%= lift&.reps || 1 %>"
+                 placeholder="Reps"
+                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+        </div>
+      </div>
+      <% if hint %>
+        <div class="ml-[216px] mt-1">
+          <span class="text-[11px] text-slate-400">Logged <%= hint[:date].strftime("%-m/%-d/%y") %>: <span class="font-medium text-slate-500"><%= hint[:weight].to_i %> x <%= hint[:reps] %></span> · E1RM <span class="font-medium text-slate-500"><%= hint[:e1rm].to_i %></span></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2 pt-4">Upper Body</h3>
+
+  <% %i[bench_press overhead_press incline_press dip chin_up].each do |exercise| %>
+    <% lift = existing_lifts[exercise] %>
+    <% hint = logged_hints[exercise] %>
+    <div>
+      <div class="grid grid-cols-[200px_1fr_1fr] gap-4 items-center">
+        <label class="text-sm font-medium text-slate-700">
+          <%= exercise.to_s.titleize %>
+          <% if %i[bench_press].include?(exercise) %><span class="text-red-500">*</span><% end %>
+        </label>
+        <div>
+          <input type="number" name="lifts[<%= exercise %>][weight]" step="0.1" min="0"
+                 value="<%= lift&.weight %>"
+                 placeholder="Weight"
+                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+        </div>
+        <div>
+          <input type="number" name="lifts[<%= exercise %>][reps]" min="1"
+                 value="<%= lift&.reps || 1 %>"
+                 placeholder="Reps"
+                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+        </div>
+      </div>
+      <% if hint %>
+        <div class="ml-[216px] mt-1">
+          <span class="text-[11px] text-slate-400">Logged <%= hint[:date].strftime("%-m/%-d/%y") %>: <span class="font-medium text-slate-500"><%= hint[:weight].to_i %> x <%= hint[:reps] %></span> · E1RM <span class="font-medium text-slate-500"><%= hint[:e1rm].to_i %></span></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

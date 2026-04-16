@@ -1,7 +1,6 @@
 <%= page_header @client.full_name do %>
   <div class="flex items-center gap-3">
     <%= btn_primary "Generate Program", new_client_program_path(@client) %>
-    <%= btn_secondary "New Assessment", new_client_prime_eight_assessment_path(@client) %>
     <%= btn_secondary "Edit", edit_client_path(@client) %>
   </div>
 <% end %>
@@ -29,13 +28,40 @@
     <div class="bg-white rounded-lg border border-slate-200 p-4">
       <div class="flex items-center justify-between mb-3">
         <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500">
-          <%= @active_program.goal.titleize %> · <%= @active_program.training_level.capitalize %> · Model <%= @active_program.periodization_model %> · <%= @active_program.frequency %>x/week
+          <%= @active_program.goal.titleize %> · <%= @active_program.training_level.capitalize %> · <%= @active_program.volume.capitalize %> Volume · Model <%= @active_program.periodization_model %> · <%= @active_program.split_type&.titleize || "Upper / Lower" %> · <%= @active_program.frequency %>x/week<% if @active_program.map_applied? %> · <span class="text-teal-600">MAP Applied</span><% end %>
         </div>
         <%= link_to "View Program", client_program_path(@client, @active_program), class: "text-sm text-teal-600 hover:text-teal-700 font-medium" %>
       </div>
     </div>
   </div>
 <% end %>
+
+<%# Share Link %>
+<div class="mb-8">
+  <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">Client Share Link</h2>
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <% share_token = @client.active_share_token %>
+    <% if share_token %>
+      <p class="text-sm text-slate-500 mb-3">Share this link with <%= @client.first_name %> so they can view their program and log workouts.</p>
+      <div class="flex items-center gap-2 mb-3">
+        <input type="text" readonly value="<%= shared_url(share_token.token) %>" id="share-link"
+               class="flex-1 px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] bg-slate-50 text-slate-600">
+        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('share-link').value);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000)"
+                class="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors">Copy</button>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]">Expires <%= share_token.expires_at.strftime("%b %-d, %Y") %></span>
+        <div class="flex items-center gap-3">
+          <%= button_to "Regenerate", client_share_token_path(@client), method: :post, class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
+          <%= button_to "Revoke", client_share_token_path(@client), method: :delete, class: "text-xs text-red-600 hover:text-red-700 font-medium" %>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-sm text-slate-500 mb-3">Generate a magic link to share <%= @client.first_name %>'s program. They can view workouts and log their training — no account needed.</p>
+      <%= button_to "Generate Share Link", client_share_token_path(@client), method: :post, class: "inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors" %>
+    <% end %>
+  </div>
+</div>
 
 <div class="flex items-center justify-between mb-3">
   <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg">MAP Assessments</h2>
@@ -79,7 +105,10 @@
   </div>
 <% end %>
 
-<h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">PrimeEight Assessments</h2>
+<div class="flex items-center justify-between mb-3">
+  <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg">PrimeEight Assessments</h2>
+  <%= link_to "New PrimeEight", new_client_prime_eight_assessment_path(@client), class: "text-sm text-teal-600 hover:text-teal-700 font-medium" %>
+</div>
 
 <% if @assessments.any? %>
   <table class="w-full">

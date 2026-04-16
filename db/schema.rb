@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "client_share_tokens", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_client_share_tokens_on_client_id"
+    t.index ["token"], name: "index_client_share_tokens_on_token", unique: true
+  end
 
   create_table "clients", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -162,6 +173,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
 
   create_table "mesocycles", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "loading_strategy"
     t.bigint "macrocycle_id", null: false
     t.integer "number"
     t.integer "phase"
@@ -206,7 +218,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
     t.integer "goal"
     t.integer "limiting_lift_lower"
     t.integer "limiting_lift_upper"
+    t.integer "macrocycle_number", default: 1, null: false
     t.string "periodization_model"
+    t.string "split_type"
     t.integer "status"
     t.integer "training_level"
     t.datetime "updated_at", null: false
@@ -221,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
     t.string "group"
     t.integer "group_type"
     t.bigint "kilo_exercise_id"
+    t.boolean "map_adjusted", default: false, null: false
     t.string "position"
     t.integer "rest_seconds"
     t.integer "sets"
@@ -252,6 +267,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
   end
 
   create_table "training_sessions", force: :cascade do |t|
+    t.date "completed_at"
     t.datetime "created_at", null: false
     t.integer "day"
     t.bigint "microcycle_id", null: false
@@ -268,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_150000) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "client_share_tokens", "clients"
   add_foreign_key "clients", "users"
   add_foreign_key "exercise_sets", "session_exercises"
   add_foreign_key "kilo_exercise_pairings", "kilo_exercises", column: "paired_exercise_id"

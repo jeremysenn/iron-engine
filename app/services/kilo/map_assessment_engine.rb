@@ -26,9 +26,10 @@ class Kilo::MapAssessmentEngine
 
     progressions.group_by(&:movement_pattern).each do |pattern, entries|
       highest_passed = entries.select(&:passed?).max_by(&:level)
+      highest_entry = entries.max_by(&:level)
       levels[pattern] = {
         level: highest_passed&.level || 0,
-        exercise: highest_passed&.exercise_name,
+        exercise: highest_passed&.exercise_name || highest_entry&.exercise_name,
         all_entries: entries.map { |e| { level: e.level, passed: e.passed? } }
       }
     end

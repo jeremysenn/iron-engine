@@ -1,5 +1,8 @@
 <%= page_header "MAP Assessment Results" do %>
-  <%= btn_secondary "Back to Client", client_path(@client) %>
+  <div class="flex items-center gap-3">
+    <%= btn_primary "Edit", edit_client_map_assessment_path(@client, @assessment) %>
+    <%= btn_secondary "Back to Client", client_path(@client) %>
+  </div>
 <% end %>
 
 <p class="text-sm text-slate-500 mb-2">
@@ -53,6 +56,9 @@
             <% if prog %>
               <% if prog.passed? %>
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Pass</span>
+              <% elsif prog.exercise_name.present? && pattern[:fail_types] %>
+                <% fail_label = pattern[:fail_types].find { |v, _| v == prog.exercise_name }&.last || "Fail" %>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700"><%= fail_label %></span>
               <% else %>
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Fail</span>
               <% end %>

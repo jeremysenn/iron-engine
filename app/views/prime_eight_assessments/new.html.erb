@@ -7,49 +7,7 @@
 </p>
 
 <%= form_with url: client_prime_eight_assessments_path(@client), method: :post, class: "max-w-2xl" do |f| %>
-  <div class="space-y-6">
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2">Lower Body</h3>
-
-    <% %i[squat front_squat deadlift].each do |exercise| %>
-      <div class="grid grid-cols-[200px_1fr_1fr] gap-4 items-center">
-        <label class="text-sm font-medium text-slate-700">
-          <%= exercise.to_s.titleize %>
-          <% if %i[squat].include?(exercise) %><span class="text-red-500">*</span><% end %>
-        </label>
-        <div>
-          <input type="number" name="lifts[<%= exercise %>][weight]" step="0.1" min="0"
-                 placeholder="Weight (lbs)"
-                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-        </div>
-        <div>
-          <input type="number" name="lifts[<%= exercise %>][reps]" min="1" value="1"
-                 placeholder="Reps"
-                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-        </div>
-      </div>
-    <% end %>
-
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base text-slate-700 border-b border-slate-200 pb-2 pt-4">Upper Body</h3>
-
-    <% %i[bench_press overhead_press incline_press dip chin_up].each do |exercise| %>
-      <div class="grid grid-cols-[200px_1fr_1fr] gap-4 items-center">
-        <label class="text-sm font-medium text-slate-700">
-          <%= exercise.to_s.titleize %>
-          <% if %i[bench_press].include?(exercise) %><span class="text-red-500">*</span><% end %>
-        </label>
-        <div>
-          <input type="number" name="lifts[<%= exercise %>][weight]" step="0.1" min="0"
-                 placeholder="Weight (lbs)"
-                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-        </div>
-        <div>
-          <input type="number" name="lifts[<%= exercise %>][reps]" min="1" value="1"
-                 placeholder="Reps"
-                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-        </div>
-      </div>
-    <% end %>
-  </div>
+  <%= render "form", existing_lifts: {}, logged_hints: @logged_hints %>
 
   <div class="flex items-center gap-3 pt-8">
     <input type="submit" value="Calculate Ratios" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors">

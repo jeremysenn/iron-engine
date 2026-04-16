@@ -34,3 +34,5 @@
 /config/*.key
 
 app/assets/builds/tailwind.css
+.gstack/
+/nbproject/private/

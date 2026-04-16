@@ -1,0 +1,105 @@
+<h1 class="font-['Satoshi',system-ui,sans-serif] font-bold text-2xl tracking-tight mb-1">
+  Welcome, <%= @client.first_name %>
+</h1>
+<p class="text-sm text-slate-500 mb-8">Your training program from IronEngine.</p>
+
+<% if @program.nil? %>
+  <div class="text-center py-12 bg-white rounded-lg border border-slate-200">
+    <p class="text-slate-500">No active program assigned yet.</p>
+    <p class="text-sm text-slate-400 mt-1">Your coach will set one up for you.</p>
+  </div>
+<% else %>
+  <%# Next Workout Card %>
+  <% if @next_session %>
+    <div class="mb-8">
+      <h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Next Workout</h2>
+      <a href="<%= shared_workout_path(@share_token.token, @next_session) %>"
+         class="block bg-white rounded-lg border-2 border-teal-600 p-5 hover:bg-teal-50 transition-colors">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg"><%= @next_session.template_name %></span>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-md text-sm font-medium text-white bg-teal-600">
+            Start Workout
+          </span>
+        </div>
+        <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500">
+          Week <%= @next_session.microcycle.week_number %> ·
+          <%= %w[Monday Tuesday Wednesday Thursday Friday Saturday Sunday][@next_session.day] || "Day #{@next_session.day}" %> ·
+          ~<%= @next_session.estimated_duration %> ·
+          <%= @next_session.session_exercises.count %> exercises
+        </div>
+      </a>
+    </div>
+  <% else %>
+    <div class="mb-8 bg-emerald-50 border border-emerald-200 rounded-lg p-5 text-center">
+      <p class="font-medium text-emerald-800">All workouts logged! Nice work.</p>
+    </div>
+  <% end %>
+
+  <%# Program Overview %>
+  <h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Program Overview</h2>
+  <div class="bg-white rounded-lg border border-slate-200 p-4 mb-6">
+    <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-4">
+      <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> ·
+      <%= @program.frequency %>x/week · Macrocycle <%= @program.macrocycle_number || 1 %>
+    </div>
+
+    <%# Macrocycle Timeline %>
+    <% mesocycles = @program.macrocycles.first&.mesocycles&.sort_by(&:number) || [] %>
+    <% total_weeks = mesocycles.sum { |m| m.microcycles.count } %>
+    <% if total_weeks > 0 %>
+      <div class="grid gap-0.5 mb-2" style="grid-template-columns: repeat(<%= total_weeks %>, 1fr)">
+        <% mesocycles.each do |mesocycle| %>
+          <% mesocycle.microcycles.sort_by(&:week_number).each do |micro| %>
+            <div class="px-1 py-2 text-center rounded-sm text-white text-xs font-['JetBrains_Mono',monospace] font-medium
+              <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>">
+              W<%= micro.week_number %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+      <div class="flex">
+        <% mesocycles.each do |mesocycle| %>
+          <% meso_weeks = mesocycle.microcycles.count %>
+          <div class="text-center font-['JetBrains_Mono',monospace] text-[10px] text-slate-400" style="flex: <%= meso_weeks %>">
+            <%= mesocycle.phase.titleize %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Session List %>
+  <h2 class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">All Sessions</h2>
+  <% mesocycles.each do |mesocycle| %>
+    <% mesocycle.microcycles.sort_by(&:week_number).each do |micro| %>
+      <details class="border border-slate-200 rounded-md mb-1 bg-white">
+        <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
+          <span class="inline-block w-2.5 h-2.5 rounded-sm mr-1.5 align-middle <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>"></span>
+          Week <%= micro.week_number %> — <%= mesocycle.phase.titleize %>
+          <span class="text-slate-400 font-normal ml-2"><%= micro.training_sessions.count %> sessions</span>
+        </summary>
+        <div class="px-4 pb-3 space-y-2">
+          <% micro.training_sessions.sort_by(&:day).each do |session| %>
+            <div class="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+              <div>
+                <span class="text-sm font-medium text-slate-700">
+                  <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.template_name %>
+                </span>
+                <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace] ml-2">~<%= session.estimated_duration %></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <% if session.logged? %>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">Logged<%= " #{session.completed_at.strftime('%-m/%-d')}" if session.completed_at %></span>
+                <% end %>
+                <a href="<%= shared_workout_path(@share_token.token, session) %>"
+                   class="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                  <%= session.logged? ? "View" : "Log Workout" %>
+                </a>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+  <% end %>
+<% end %>

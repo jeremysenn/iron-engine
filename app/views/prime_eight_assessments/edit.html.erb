@@ -1,0 +1,16 @@
+<%= page_header "Edit PrimeEight Assessment" do %>
+  <%= btn_secondary "Back", client_prime_eight_assessment_path(@client, @assessment) %>
+<% end %>
+
+<p class="text-sm text-slate-500 mb-6">
+  Update weight and reps for each lift. <strong>Squat and Bench Press are required.</strong> Minimum 4 of 8 lifts.
+</p>
+
+<%= form_with url: client_prime_eight_assessment_path(@client, @assessment), method: :patch, class: "max-w-2xl" do |f| %>
+  <%= render "form", existing_lifts: @existing_lifts, logged_hints: {} %>
+
+  <div class="flex items-center gap-3 pt-8">
+    <input type="submit" value="Recalculate Ratios" class="px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors">
+    <%= link_to "Cancel", client_prime_eight_assessment_path(@client, @assessment), class: "text-sm text-slate-500 hover:text-slate-700" %>
+  </div>
+<% end %>

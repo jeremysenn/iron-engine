@@ -51,6 +51,21 @@ Approach: read each PDF page, extract every exercise name, compare against DB, a
 ones with correct body_region/category/subcategory. Assign video URLs from sibling exercises
 in the same category where possible.
 
+### Goal-Specific Program Generation
+**What:** Enable selecting Hypertrophy, Absolute Strength, Relative Strength, and Power goals
+when generating a program, with each goal applying its own periodization model, rep schemes,
+rest periods, and phase structure from the KILO methodology.
+**Why:** Currently only "Balanced" is applied. Coaches need goal-specific programming to match
+client objectives. The periodization engine and seed data already support multiple goals — the
+remaining work is wiring up the goal selection to influence split selection, template choice,
+and training method assignment correctly for each goal type.
+**Effort:** M (human: ~1 week / CC: ~2 hours)
+**Depends on:** Nothing — periodization seed data already covers all goals
+**Context:** The goal selector on the program form is currently locked to "Balanced". The
+PeriodizationEngine, MacrocycleBuilder, and TrainingSplitSelector already accept a goal param —
+the work is verifying that each goal produces correct output end-to-end and adding any missing
+seed data rows.
+
 ## P2 — Post-MVP polish
 
 ### PDF Export
@@ -84,8 +99,19 @@ Highlight changes in limiting lifts, model selection, phase structure.
 ### Body Comp Calculator
 Port Jackson-Pollock 3/7-site, BMI, waist-hip ratio from old syd_api. Design doc Phase 4.
 
-### Client Invitation Flow
-Allow coaches to invite clients. Clients get accounts. Design doc Phase 4.
+### Client Accounts with Invitation (upgrade from Magic Links)
+**What:** Add a `role` column to `User` (`:coach` / `:client`). Coach sends an email invite;
+client creates an account linked to their `Client` record. Replaces magic link sharing with
+proper client accounts.
+**Why:** Real client identity enables notifications, messaging, progress photos, and audit
+trails. Magic links have no persistent identity and are less secure (link forwarding).
+**Effort:** M (human: ~1 week / CC: ~3 hours)
+**Depends on:** Magic link sharing (already implemented)
+**Context:** TrainHeroic and TrueCoach both use email-based invitation with auto-linking.
+TrueCoach also supports pre-built "onboarding sequences" that auto-assign to new clients.
+The existing `User` model with `has_secure_password` makes adding a role straightforward.
+Namespace client routes under `client/` to avoid collision with coach routes. Add compliance
+dashboards (sessions completed vs. prescribed, 7/30/90-day windows).
 
 ### Messaging
 Coach-to-client messaging. Design doc Phase 4.

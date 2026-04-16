@@ -1,0 +1,9 @@
+<%= page_header "Edit MAP Assessment" do %>
+  <%= btn_secondary "Back", client_map_assessment_path(@client, @assessment) %>
+<% end %>
+
+<%= render "form",
+    form_url: client_map_assessment_path(@client, @assessment),
+    form_method: :patch,
+    progressions_by_key: @progressions_by_key,
+    submit_label: "Update Assessment" %>

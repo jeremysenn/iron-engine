@@ -4,8 +4,49 @@ class SessionExercisesController < ApplicationController
   before_action :find_client
 
   def update
-    @exercise = SessionExercise.find(params[:id])
+    @exercise = SessionExercise.joins(training_session: { microcycle: { mesocycle: { macrocycle: :program } } })
+      .where(programs: { client_id: @client.id })
+      .find(params[:id])
+    @program = @exercise.training_session.microcycle.mesocycle.macrocycle.program
 
+    # Handle exercise swap (form-based, full page)
+    if params[:kilo_exercise_id].present? || params[:exercise_name].present?
+      update_exercise_name
+      return
+    end
+
+    # Handle inline field edits (sets, reps, tempo, rest)
+    updates = {}
+    updates[:sets] = params[:sets].to_i if params[:sets].present?
+    updates[:tempo] = params[:tempo] if params[:tempo].present?
+    updates[:rest_seconds] = params[:rest_seconds].to_i if params[:rest_seconds].present?
+
+    @exercise.update!(updates) if updates.any?
+
+    # Handle reps change (stored on exercise_sets)
+    if params[:reps].present?
+      reps_str = params[:reps].to_s
+      if reps_str.include?(",")
+        # Per-set reps: "8,8,6,6,4,4"
+        rep_values = reps_str.split(",").map { |r| r.strip.to_i }
+        @exercise.exercise_sets.order(:set_number).each_with_index do |es, i|
+          es.update!(target_reps: rep_values[i] || rep_values.last)
+        end
+      else
+        # Uniform reps: "12"
+        @exercise.exercise_sets.update_all(target_reps: reps_str.to_i)
+      end
+    end
+
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to client_program_path(@client, @program) }
+    end
+  end
+
+  private
+
+  def update_exercise_name
     new_name = nil
     new_kilo_id = nil
 
@@ -18,28 +59,24 @@ class SessionExercisesController < ApplicationController
       new_kilo_id = nil
     end
 
-    if new_name
-      if params[:scope] == "mesocycle"
-        # Update all matching exercises in the same mesocycle (same position + session_type)
-        session = @exercise.training_session
-        mesocycle = session.microcycle.mesocycle
+    return redirect_to(client_workout_path(@client, @exercise.training_session), alert: "No exercise selected.") unless new_name
 
-        matching = SessionExercise.joins(training_session: :microcycle)
-          .where(microcycles: { mesocycle_id: mesocycle.id })
-          .where(position: @exercise.position)
-          .where(training_sessions: { session_type: session.session_type })
+    session = @exercise.training_session
 
-        matching.update_all(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
+    if params[:scope] == "mesocycle"
+      mesocycle = session.microcycle.mesocycle
+      matching = SessionExercise.joins(training_session: :microcycle)
+        .where(microcycles: { mesocycle_id: mesocycle.id })
+        .where(position: @exercise.position)
+        .where(training_sessions: { session_type: session.session_type })
 
-        redirect_to client_workout_path(@client, session),
-          notice: "Exercise updated across all #{matching.count} sessions in #{mesocycle.phase.titleize} #{mesocycle.number}."
-      else
-        # Update only this one session exercise
-        @exercise.update!(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
-        redirect_to client_workout_path(@client, @exercise.training_session), notice: "Exercise updated."
-      end
+      matching.update_all(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
+
+      redirect_to client_program_path(@client, @program),
+        notice: "Exercise updated across all #{matching.count} sessions in #{mesocycle.phase.titleize}."
     else
-      redirect_to client_workout_path(@client, @exercise.training_session), alert: "No exercise selected."
+      @exercise.update!(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
+      redirect_to client_program_path(@client, @program), notice: "Exercise updated."
     end
   end
 end

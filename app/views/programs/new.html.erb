@@ -20,30 +20,42 @@
 <% preset_goal = params[:goal].to_s %>
 <% preset_freq = (params[:frequency] || 4).to_i %>
 <% preset_volume = (params[:volume] || "medium").to_s %>
+<% preset_split_type = (params[:split_type] || "upper_lower").to_s %>
+<% preset_macrocycle = (params[:macrocycle_number] || 1).to_i %>
 
-<%# Build JSON data for ALL splits for this training level %>
-<% all_splits = KiloTrainingSplit.where(training_level: @client.training_age).order(:goal, :phase, :frequency) %>
-<% splits_json = all_splits.map { |s|
-  struct = s.split_structure.is_a?(String) ? JSON.parse(s.split_structure) : s.split_structure
-  { id: s.id, goal: s.goal, phase: s.phase, frequency: s.frequency,
-    name: s.name, training_level: s.training_level,
-    summary: s.session_type_summary, display: s.display_label_with_days }
-}.to_json %>
 
 <%= form_with url: client_programs_path(@client), method: :post, class: "max-w-2xl space-y-5" do |f| %>
+  <% if @has_map_assessment %>
+    <div class="px-4 py-3 rounded-md border border-teal-200 bg-teal-50 text-sm">
+      <label class="flex items-start gap-3 cursor-pointer">
+        <% map_checked = params[:apply_map] != "0" %>
+        <input type="checkbox" name="apply_map" value="1" <%= 'checked' if map_checked %>
+               class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
+        <div>
+          <span class="font-medium text-teal-800">Apply MAP Assessment progressions</span>
+          <p class="text-teal-600 mt-0.5">
+            Exercises will be adjusted based on <%= @client.full_name %>'s MAP assessment
+            (<%= @map_assessment.assessed_at.strftime("%b %-d, %Y") %>,
+            <%= @map_assessment.map_progressions.count %> patterns recorded<% if @map_assessment.complete? %>, complete<% else %>, incomplete<% end %>).
+          </p>
+        </div>
+      </label>
+    </div>
+  <% end %>
+
   <div class="grid grid-cols-2 gap-4">
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Goal</label>
-      <select name="goal" required class="<%= sc %>" id="goal-select" onchange="updateTrainingSplits()">
-        <option value="">Select goal</option>
-        <% [["balanced", "Balanced"], ["hypertrophy", "Hypertrophy"], ["absolute_strength", "Absolute Strength"], ["relative_strength", "Relative Strength"], ["power", "Power"]].each do |val, label| %>
-          <option value="<%= val %>" <%= 'selected' if preset_goal == val %>><%= label %></option>
+      <select name="goal" id="goal-select" required class="<%= sc %>" onchange="onGoalChange()">
+        <option value="balanced" <%= 'selected' if preset_goal.blank? || preset_goal == 'balanced' %>>Balanced</option>
+        <% if @has_assessment %>
+          <option value="optimizing_strength_ratios" <%= 'selected' if preset_goal == 'optimizing_strength_ratios' %>>Optimizing Strength Ratios</option>
         <% end %>
       </select>
     </div>
-    <div>
+    <div id="volume-wrapper">
       <label class="block text-sm font-medium text-slate-500 mb-1">Volume Tolerance</label>
-      <select name="volume" required class="<%= sc %>">
+      <select name="volume" id="volume-select" required class="<%= sc %>" onchange="updateRepSchemePreview()">
         <% %w[low medium high].each do |v| %>
           <option value="<%= v %>" <%= 'selected' if preset_volume == v %>><%= v.capitalize %></option>
         <% end %>
@@ -51,49 +63,76 @@
     </div>
   </div>
 
+  <%# OSR Limiting Lifts Selection %>
+  <% default_upper = @limiting_lifts&.dig(:upper)&.to_s %>
+  <% default_lower = @limiting_lifts&.dig(:lower)&.to_s %>
+  <% preset_osr_upper = params.key?(:osr_limiting_upper) ? params[:osr_limiting_upper].to_s : default_upper.to_s %>
+  <% preset_osr_lower = params.key?(:osr_limiting_lower) ? params[:osr_limiting_lower].to_s : default_lower.to_s %>
+  <div id="osr-limiting-lifts" class="hidden">
+    <div class="px-4 py-3 rounded-md border border-indigo-200 bg-indigo-50 text-sm">
+      <p class="font-medium text-indigo-800 mb-2">Limiting Lift Selection</p>
+      <% if @limiting_lifts %>
+        <p class="text-xs text-indigo-400 mb-3">
+          Defaults based on PrimeEight assessment. Override if needed.
+        </p>
+      <% else %>
+        <p class="text-xs text-amber-600 mb-3">
+          No PrimeEight assessment found — select limiting lifts manually.
+        </p>
+      <% end %>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-indigo-500 mb-1">Upper Body Limiting Lift</label>
+          <select name="osr_limiting_upper" id="osr-upper-select" class="<%= sc %> bg-white" onchange="validateOsrLimits()">
+            <option value="" <%= 'selected' if preset_osr_upper.blank? %>>None</option>
+            <% %w[overhead_press incline_press bench_press dip].each do |lift| %>
+              <option value="<%= lift %>" <%= 'selected' if preset_osr_upper == lift %>><%= lift.titleize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-indigo-500 mb-1">Lower Body Limiting Lift</label>
+          <select name="osr_limiting_lower" id="osr-lower-select" class="<%= sc %> bg-white" onchange="validateOsrLimits()">
+            <option value="" <%= 'selected' if preset_osr_lower.blank? %>>None</option>
+            <% %w[squat front_squat deadlift].each do |lift| %>
+              <option value="<%= lift %>" <%= 'selected' if preset_osr_lower == lift %>><%= lift.titleize %></option>
+            <% end %>
+          </select>
+        </div>
+        <div id="osr-limit-warning" class="col-span-2 hidden">
+          <p class="text-xs text-red-600 mt-1">At least one limiting lift must be selected.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium text-slate-500 mb-1">Periodization Cycle</label>
+    <div class="grid grid-cols-2 gap-4">
+      <select name="macrocycle_number" id="macrocycle-select" class="<%= sc %>" onchange="onMacrocycleChange()">
+        <% (1..16).each do |n| %>
+          <option value="<%= n %>" <%= 'selected' if preset_macrocycle == n %>>Macrocycle <%= n %></option>
+        <% end %>
+      </select>
+    </div>
+    <div id="rep-scheme-preview" class="mt-2 text-sm font-['JetBrains_Mono',monospace]"></div>
+  </div>
+
   <div class="grid grid-cols-2 gap-4">
     <div>
       <label class="block text-sm font-medium text-slate-500 mb-1">Training Frequency</label>
-      <select name="frequency" required class="<%= sc %>" id="frequency-select" onchange="updateTrainingSplits()">
+      <select name="frequency" required class="<%= sc %>" id="frequency-select" onchange="updateStructureSections()">
         <% (2..5).each do |f| %>
           <option value="<%= f %>" <%= 'selected' if preset_freq == f %>><%= f %>x / week</option>
         <% end %>
       </select>
     </div>
-    <div>
-      <label class="block text-sm font-medium text-slate-500 mb-1">Microcycle Length</label>
-      <div id="microcycle-length-display" class="px-3 py-2.5 rounded-md border border-slate-200 bg-slate-50 text-sm text-slate-600 font-['JetBrains_Mono',monospace]">
-        7 days (1 week)
-      </div>
-    </div>
-  </div>
-
-  <%# === Training Split Selection === %>
-  <div class="bg-white rounded-lg border border-slate-200 p-4" id="training-split-section">
-    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Training Split</h3>
-    <p class="text-xs text-slate-400 mb-3">
-      Default auto-selected for the chosen Goal + Frequency.
-      Override with any available split if needed.
-    </p>
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
-          <span class="inline-block w-2 h-2 rounded-sm bg-teal-600"></span> Accumulation Split
-        </label>
-        <select name="acc_split_id" class="<%= sc %>" id="acc-split-select">
-          <option value="">Select goal first...</option>
-        </select>
-        <p class="text-xs text-slate-400 mt-1 font-['JetBrains_Mono',monospace] truncate" id="acc-split-preview"></p>
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
-          <span class="inline-block w-2 h-2 rounded-sm bg-amber-600"></span> Intensification Split
-        </label>
-        <select name="int_split_id" class="<%= sc %>" id="int-split-select">
-          <option value="">Select goal first...</option>
-        </select>
-        <p class="text-xs text-slate-400 mt-1 font-['JetBrains_Mono',monospace] truncate" id="int-split-preview"></p>
-      </div>
+    <div id="split-type-wrapper" class="hidden">
+      <label class="block text-sm font-medium text-slate-500 mb-1">Split Type</label>
+      <select name="split_type" class="<%= sc %>" id="split-type-select" onchange="updateStructureSections()">
+        <option value="upper_lower" <%= 'selected' if preset_split_type == 'upper_lower' %>>Upper / Lower</option>
+        <option value="full_body" <%= 'selected' if preset_split_type == 'full_body' %>>Full Body</option>
+      </select>
     </div>
   </div>
 
@@ -102,21 +141,57 @@
     <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Mesocycle Length (weeks per phase)</h3>
     <p class="text-xs text-slate-400 mb-3">Default is 3 weeks per mesocycle (12 weeks total). Adjust per phase if needed.</p>
     <div class="grid grid-cols-4 gap-3">
-      <% [["Acc 1", "acc1_weeks", "teal"], ["Int 1", "int1_weeks", "amber"], ["Acc 2", "acc2_weeks", "teal"], ["Int 2", "int2_weeks", "amber"]].each do |label, name, color| %>
+      <% [["Acc", "acc1_weeks", "teal", 0, 1], ["Int", "int1_weeks", "amber", 0, 2], ["Acc", "acc2_weeks", "teal", 1, 3], ["Int", "int2_weeks", "amber", 1, 4]].each do |phase_abbr, name, color, label_offset, meso_num| %>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
-            <span class="inline-block w-2 h-2 rounded-sm bg-<%= color %>-600"></span> <%= label %>
+            <span class="inline-block w-2 h-2 rounded-sm bg-<%= color %>-600"></span>
+            <span data-phase-label data-abbr="<%= phase_abbr %>" data-offset="<%= label_offset %>"><%= phase_abbr %> <%= (preset_macrocycle - 1) * 2 + 1 + label_offset %></span>
           </label>
-          <select name="<%= name %>" class="<%= sc %>">
+          <% preset_w = (params[name] || 3).to_i %>
+          <select name="<%= name %>" data-meso-weeks="<%= meso_num %>" class="<%= sc %>" onchange="updateTotalWeeks(); syncLoadingForMeso(<%= meso_num %>)">
             <% (1..6).each do |w| %>
-              <option value="<%= w %>" <%= 'selected' if w == 3 %>><%= w %> <%= w == 1 ? 'week' : 'weeks' %></option>
+              <option value="<%= w %>" <%= 'selected' if w == preset_w %>><%= w %> <%= w == 1 ? 'week' : 'weeks' %></option>
             <% end %>
           </select>
         </div>
       <% end %>
     </div>
-    <p class="text-xs text-slate-400 mt-2 font-['JetBrains_Mono',monospace]" id="total-weeks-display">Total: 12 weeks</p>
+    <% total = [(params[:acc1_weeks] || 3).to_i, (params[:int1_weeks] || 3).to_i, (params[:acc2_weeks] || 3).to_i, (params[:int2_weeks] || 3).to_i].sum %>
+    <p class="text-xs text-slate-400 mt-2 font-['JetBrains_Mono',monospace]" id="total-weeks-display">Total: <%= total %> weeks</p>
   </div>
+
+  <%# Mesocycle Loading Strategy (non-OSR only) %>
+  <% loading_options = [["Constant", "constant"], ["Ascending", "ascending"], ["Descending", "descending"], ["Step", "step"], ["Peaking", "peaking"], ["Concentrated", "concentrated"]] %>
+  <div id="mesocycle-loading-section" class="bg-white rounded-lg border border-slate-200 p-4">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Mesocycle Loading</h3>
+    <p class="text-xs text-slate-400 mb-3">Adjusts A-series set volume across weeks. Only applies to 3-week mesocycles with standard sets.</p>
+    <div class="grid grid-cols-4 gap-3">
+      <% [["Accumulation", "loading_strategy_1", "teal", 0, 1],
+          ["Intensification", "loading_strategy_2", "amber", 0, 2],
+          ["Accumulation", "loading_strategy_3", "teal", 1, 3],
+          ["Intensification", "loading_strategy_4", "amber", 1, 4]].each do |phase_name, param_name, color, label_offset, meso_num| %>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+            <span class="inline-block w-2 h-2 rounded-sm bg-<%= color %>-600"></span>
+            <span data-loading-label data-phase="<%= phase_name %>" data-offset="<%= label_offset %>"><%= phase_name %> <%= (preset_macrocycle - 1) * 2 + 1 + label_offset %></span>
+          </label>
+          <% preset_ls = (params[param_name] || "constant").to_s %>
+          <select name="<%= param_name %>" data-meso-loading="<%= meso_num %>" class="<%= sc %>">
+            <% loading_options.each do |label, value| %>
+              <option value="<%= value %>" <%= 'selected' if preset_ls == value %>><%= label %></option>
+            <% end %>
+          </select>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Resolve preset structure value from params (supports both nested and flat param formats) %>
+  <% structure_preset = ->(phase_prefix, slot, default_val) {
+       nested = params.dig("#{phase_prefix}_structure", slot)
+       flat = params[:"#{phase_prefix}_structure_#{slot}"]
+       nested || flat || default_val
+     } %>
 
   <% all_opts = Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS + Kilo::MicrocycleStructures::LOWER_BODY_OPTIONS %>
   <% ub_opts = Kilo::MicrocycleStructures::UPPER_BODY_OPTIONS %>
@@ -139,7 +214,7 @@
               <label class="block text-xs font-medium text-slate-400 mb-1"><%= slot.titleize %></label>
               <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% fb_opts.each do |opt| %>
-                  <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
+                  <option value="<%= opt %>" <%= 'selected' if opt == structure_preset.call(phase == 'Accumulation' ? 'acc' : 'int', slot, dv) %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
               </select>
             </div>
@@ -151,8 +226,8 @@
 
   <%# 3x Full Body %>
   <div data-split-type="full_body" data-freq="3" class="hidden space-y-4">
-    <% { "Accumulation" => ["teal", { "session_1" => "squat_1_overhead_press", "session_2" => "front_squat_incline_press", "session_3" => "squat_1_overhead_press" }],
-         "Intensification" => ["amber", { "session_1" => "squat_2_bench_press", "session_2" => "deadlift_dip", "session_3" => "squat_2_bench_press" }]
+    <% { "Accumulation" => ["teal", { "full_body_1" => "squat_1_overhead_press", "full_body_2" => "front_squat_incline_press", "full_body_3" => "squat_2_bench_press" }],
+         "Intensification" => ["amber", { "full_body_1" => "deadlift_dip", "full_body_2" => "squat_1_overhead_press", "full_body_3" => "front_squat_incline_press" }]
        }.each do |phase, (color, defaults)| %>
       <div class="bg-white rounded-lg border border-slate-200 p-4">
         <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3 flex items-center gap-2">
@@ -164,7 +239,7 @@
               <label class="block text-xs font-medium text-slate-400 mb-1"><%= %w[Monday Wednesday Friday][i] %></label>
               <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% fb_opts.each do |opt| %>
-                  <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
+                  <option value="<%= opt %>" <%= 'selected' if opt == structure_preset.call(phase == 'Accumulation' ? 'acc' : 'int', slot, dv) %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
               </select>
             </div>
@@ -189,7 +264,7 @@
               <label class="block text-xs font-medium text-slate-400 mb-1"><%= %w[Monday Wednesday Friday][i] %></label>
               <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% all_opts.each do |opt| %>
-                  <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
+                  <option value="<%= opt %>" <%= 'selected' if opt == structure_preset.call(phase == 'Accumulation' ? 'acc' : 'int', slot, dv) %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
               </select>
             </div>
@@ -215,7 +290,7 @@
               <label class="block text-xs font-medium text-slate-400 mb-1"><%= slot.titleize %></label>
               <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% opts.each do |opt| %>
-                  <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
+                  <option value="<%= opt %>" <%= 'selected' if opt == structure_preset.call(phase == 'Accumulation' ? 'acc' : 'int', slot, dv) %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
               </select>
             </div>
@@ -241,7 +316,7 @@
               <label class="block text-xs font-medium text-slate-400 mb-1"><%= slot.titleize %></label>
               <select name="<%= phase == 'Accumulation' ? 'acc' : 'int' %>_structure[<%= slot %>]" class="<%= sc %>">
                 <% opts.each do |opt| %>
-                  <option value="<%= opt %>" <%= 'selected' if opt == dv %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
+                  <option value="<%= opt %>" <%= 'selected' if opt == structure_preset.call(phase == 'Accumulation' ? 'acc' : 'int', slot, dv) %>><%= Kilo::MicrocycleStructures.label_for(opt) %></option>
                 <% end %>
               </select>
             </div>
@@ -265,101 +340,96 @@
 <% end %>
 
 <script>
-const ALL_SPLITS = <%= raw splits_json %>;
-
-function updateTrainingSplits() {
+function onGoalChange() {
   const goal = document.getElementById('goal-select').value;
-  const freq = parseInt(document.getElementById('frequency-select').value);
+  const isOsr = goal === 'optimizing_strength_ratios';
 
-  updateSplitDropdown('acc-split-select', 'acc-split-preview', goal, 'accumulation', freq);
-  updateSplitDropdown('int-split-select', 'int-split-preview', goal, 'intensification', freq);
-  updateStructureSections();
-}
+  // Show/hide OSR limiting lifts display
+  const osrPanel = document.getElementById('osr-limiting-lifts');
+  if (osrPanel) osrPanel.classList.toggle('hidden', !isOsr);
 
-function updateSplitDropdown(selectId, previewId, goal, phase, freq) {
-  const select = document.getElementById(selectId);
-  const preview = document.getElementById(previewId);
+  // Volume stays visible for OSR — it feeds the periodization model for Acc1/Int2 rep schemes
 
-  // Get ALL splits for this phase + frequency (not restricted by goal)
-  let allForFreq = ALL_SPLITS.filter(s => s.phase === phase && s.frequency === freq);
+  // Show/hide rep scheme preview (not applicable for OSR)
+  const repPreview = document.getElementById('rep-scheme-preview');
+  if (repPreview) repPreview.classList.toggle('hidden', isOsr);
 
-  // Deduplicate by name (same split name at same freq = same structure)
-  const seen = new Map();
-  allForFreq.forEach(s => {
-    const key = s.name + '|' + s.frequency;
-    if (!seen.has(key)) seen.set(key, s);
-  });
-  const uniqueSplits = Array.from(seen.values());
+  // Show/hide mesocycle loading section (not applicable for OSR)
+  const loadingSection = document.getElementById('mesocycle-loading-section');
+  if (loadingSection) loadingSection.classList.toggle('hidden', isOsr);
 
-  // Find the default for this goal (exact goal + phase + freq match)
-  let defaultSplit = ALL_SPLITS.find(s => s.goal === goal && s.phase === phase && s.frequency === freq);
-
-  // If no exact match, try closest lower frequency for the default
-  if (!defaultSplit) {
-    for (let f = freq - 1; f >= 2; f--) {
-      defaultSplit = ALL_SPLITS.find(s => s.goal === goal && s.phase === phase && s.frequency === f);
-      if (defaultSplit) break;
+  // Show/hide microcycle structure customization (OSR uses macrocycle templates)
+  document.querySelectorAll('[data-split-type]').forEach(el => {
+    if (isOsr) {
+      el.classList.add('hidden');
     }
-  }
-
-  select.innerHTML = '';
-
-  if (uniqueSplits.length === 0 && !defaultSplit) {
-    select.innerHTML = '<option value="">No splits available</option>';
-    preview.textContent = '';
-    return;
-  }
-
-  // Add "Default" option first
-  const defaultOpt = document.createElement('option');
-  defaultOpt.value = '';
-  defaultOpt.textContent = defaultSplit
-    ? `Default: ${defaultSplit.name} — ${defaultSplit.frequency}x/wk`
-    : 'Default (auto)';
-  defaultOpt.dataset.summary = defaultSplit ? defaultSplit.summary : '';
-  defaultOpt.selected = true;
-  select.appendChild(defaultOpt);
-
-  // Add all available splits as override options
-  uniqueSplits.forEach(split => {
-    const opt = document.createElement('option');
-    opt.value = split.id;
-    opt.textContent = split.display;
-    opt.dataset.summary = split.summary;
-    select.appendChild(opt);
   });
 
-  updateSplitPreview(selectId, previewId);
-  select.onchange = function() {
-    updateSplitPreview(selectId, previewId);
-    updateStructureSections();
-  };
+  // Show/hide split type and frequency options as needed
+  updateStructureSections();
+  if (!isOsr) updateRepSchemePreview();
+
+  validateOsrLimits();
 }
 
-function updateSplitPreview(selectId, previewId) {
-  const select = document.getElementById(selectId);
-  const preview = document.getElementById(previewId);
-  const selected = select.options[select.selectedIndex];
-  preview.textContent = selected ? (selected.dataset.summary || '') : '';
+function validateOsrLimits() {
+  const upper = document.getElementById('osr-upper-select');
+  const lower = document.getElementById('osr-lower-select');
+  const warning = document.getElementById('osr-limit-warning');
+  const submit = document.querySelector('input[type="submit"]');
+  if (!upper || !lower) return;
+
+  const goal = document.getElementById('goal-select').value;
+  const isOsr = goal === 'optimizing_strength_ratios';
+  const hasAtLeastOne = upper.value !== '' || lower.value !== '';
+
+  if (warning) warning.classList.toggle('hidden', !isOsr || hasAtLeastOne);
+  if (submit && isOsr) submit.disabled = !hasAtLeastOne;
+  if (submit && !isOsr) submit.disabled = false;
 }
 
 function updateStructureSections() {
+  const goal = document.getElementById('goal-select').value;
+  const isOsr = goal === 'optimizing_strength_ratios';
+
+  // OSR hides all microcycle structure sections — macrocycle templates determine sessions
+  if (isOsr) {
+    document.querySelectorAll('[data-split-type]').forEach(el => {
+      el.classList.add('hidden');
+      el.querySelectorAll('select').forEach(s => s.disabled = true);
+    });
+    const stw = document.getElementById('split-type-wrapper');
+    if (stw) stw.classList.add('hidden');
+    return;
+  }
+
   const freq = parseInt(document.getElementById('frequency-select').value);
+  const splitTypeWrapper = document.getElementById('split-type-wrapper');
+  const splitTypeSelect = document.getElementById('split-type-select');
 
-  // Determine split type from the accumulation split selection
-  const accSelect = document.getElementById('acc-split-select');
-  const selectedOpt = accSelect.options[accSelect.selectedIndex];
-  const splitLabel = selectedOpt ? selectedOpt.textContent : '';
+  // Show split type choice for 3x frequency
+  if (freq === 3) {
+    splitTypeWrapper.classList.remove('hidden');
+  } else {
+    splitTypeWrapper.classList.add('hidden');
+  }
 
-  let splitType = 'upper_lower'; // default
-  if (splitLabel.includes('Full Body')) splitType = 'full_body';
-  else if (splitLabel.includes('Body Part')) splitType = 'body_part';
+  // Determine split type and effective frequency for structure sections
+  let splitType = 'upper_lower';
+  let structureFreq = freq;
+  if (freq === 2) {
+    splitType = 'full_body';
+  } else if (freq === 3) {
+    splitType = splitTypeSelect.value;
+    // 3x Upper/Lower reuses the 4x structure (UB1/LB1/UB2/LB2 rotating through 3 slots)
+    if (splitType === 'upper_lower') structureFreq = 4;
+  }
 
   // Show/hide structure sections
   document.querySelectorAll('[data-split-type]').forEach(el => {
     const typeMatch = el.dataset.splitType === splitType;
     const freqAttr = el.dataset.freq;
-    const freqMatch = !freqAttr || parseInt(freqAttr) === freq;
+    const freqMatch = !freqAttr || parseInt(freqAttr) === structureFreq;
     el.classList.toggle('hidden', !(typeMatch && freqMatch));
   });
 
@@ -377,11 +447,111 @@ function updateTotalWeeks() {
   if (el) el.textContent = `Total: ${weeks} weeks`;
 }
 
+function syncLoadingForMeso(mesoNum) {
+  const weeksSelect = document.querySelector(`[data-meso-weeks="${mesoNum}"]`);
+  const loadingSelect = document.querySelector(`[data-meso-loading="${mesoNum}"]`);
+  if (!weeksSelect || !loadingSelect) return;
+
+  const weeks = parseInt(weeksSelect.value);
+  if (weeks !== 3) {
+    loadingSelect.value = 'constant';
+    loadingSelect.disabled = true;
+  } else {
+    loadingSelect.disabled = false;
+  }
+}
+
+function syncAllLoadingSelectors() {
+  [1, 2, 3, 4].forEach(syncLoadingForMeso);
+}
+
+const PHASE_OFFSETS = {
+  accumulation: 0,
+  intensification: 0,
+  accumulation_2: 1,
+  intensification_2: 1
+};
+
+const PHASE_ABBREVS = {
+  accumulation: 'Acc',
+  intensification: 'Int',
+  accumulation_2: 'Acc',
+  intensification_2: 'Int'
+};
+
+const PHASE_COLORS = {
+  accumulation: 'text-teal-700',
+  intensification: 'text-amber-700',
+  accumulation_2: 'text-teal-700',
+  intensification_2: 'text-amber-700'
+};
+
+function phaseNumber(macroNum, offset) {
+  return (macroNum - 1) * 2 + 1 + offset;
+}
+
+function updatePhaseLabels() {
+  const macroNum = parseInt(document.getElementById('macrocycle-select').value);
+  document.querySelectorAll('[data-phase-label]').forEach(el => {
+    const abbr = el.dataset.abbr;
+    const offset = parseInt(el.dataset.offset);
+    el.textContent = `${abbr} ${phaseNumber(macroNum, offset)}`;
+  });
+  document.querySelectorAll('[data-loading-label]').forEach(el => {
+    const phase = el.dataset.phase;
+    const offset = parseInt(el.dataset.offset);
+    el.textContent = `${phase} ${phaseNumber(macroNum, offset)}`;
+  });
+}
+
+function updateRepSchemePreview() {
+  const macroNum = parseInt(document.getElementById('macrocycle-select').value);
+  const volume = document.getElementById('volume-select').value;
+  const previewEl = document.getElementById('rep-scheme-preview');
+
+  const url = `<%= rep_scheme_preview_client_programs_path(@client) %>?macrocycle_number=${macroNum}&volume=${volume}`;
+
+  fetch(url, { headers: { 'Accept': 'application/json' } })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.phases || data.phases.length === 0) {
+        previewEl.innerHTML = '<span class="text-xs text-slate-400">No data for this combination.</span>';
+        return;
+      }
+
+      const BG_COLORS = {
+        accumulation: 'bg-teal-50 border-teal-200 text-teal-800',
+        intensification: 'bg-amber-50 border-amber-200 text-amber-800',
+        accumulation_2: 'bg-teal-50 border-teal-200 text-teal-800',
+        intensification_2: 'bg-amber-50 border-amber-200 text-amber-800'
+      };
+
+      const html = '<div class="grid grid-cols-4 gap-2">' + data.phases.map(p => {
+        const abbr = PHASE_ABBREVS[p.phase] || p.phase;
+        const offset = PHASE_OFFSETS[p.phase] || 0;
+        const num = phaseNumber(macroNum, offset);
+        const colors = BG_COLORS[p.phase] || 'bg-slate-50 border-slate-200 text-slate-600';
+        return `<div class="px-2 py-1.5 rounded border text-xs ${colors}"><span class="font-medium">${abbr} ${num}</span> <span class="opacity-75">${p.rep_scheme}</span></div>`;
+      }).join('') + '</div>';
+
+      previewEl.innerHTML = html;
+    })
+    .catch(() => {
+      previewEl.innerHTML = '';
+    });
+}
+
+function onMacrocycleChange() {
+  updatePhaseLabels();
+  updateRepSchemePreview();
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-  updateTrainingSplits();
+  onGoalChange();
+  updateStructureSections();
   updateTotalWeeks();
-  document.querySelectorAll('[name$="_weeks"]').forEach(el =>
-    el.addEventListener('change', updateTotalWeeks));
+  updateRepSchemePreview();
+  syncAllLoadingSelectors();
 });
 </script>
