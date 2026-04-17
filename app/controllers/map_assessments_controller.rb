@@ -16,13 +16,13 @@ class MapAssessmentsController < ApplicationController
     ],
     upper_body: [
       { key: "dip", name: "Dip", levels: 0, test: "Dip",
-        fail_types: [["rom", "Fail - ROM"], ["scapular", "Fail - Scapular"]] },
+        fail_types: [ [ "rom", "Fail - ROM" ], [ "scapular", "Fail - Scapular" ] ] },
       { key: "chin_up", name: "Chin-Up", levels: 0, test: "Chin-Up - Medium Grip - Semi-Supinated" },
       { key: "overhead_press", name: "Overhead Press", levels: 3 },
       { key: "row", name: "Row", levels: 3 },
       { key: "push_up", name: "Push-Up", levels: 3 },
       { key: "external_rotation", name: "External Rotation", levels: 0, test: "External Rotation - Seated - Arm at 45°",
-        fail_types: [["external_rom", "Fail - External Rotation ROM"], ["internal_rom", "Fail - Internal Rotation ROM"], ["both_rom", "Fail - External and Internal Rotation ROM"]] },
+        fail_types: [ [ "external_rom", "Fail - External Rotation ROM" ], [ "internal_rom", "Fail - Internal Rotation ROM" ], [ "both_rom", "Fail - External and Internal Rotation ROM" ] ] },
       { key: "trap_3_raise", name: "Trap 3 Raise", levels: 0, test: "Trap 3 Raise - Prone - 15° Incline - One-Arm" },
       { key: "prone_lateral_raise", name: "Prone Lateral Raise", levels: 0, test: "Lateral Raise - Prone - 15° Incline - Neutral - One-Arm" }
     ]
@@ -81,7 +81,8 @@ class MapAssessmentsController < ApplicationController
   end
 
   def patterns_params
-    params.fetch(:patterns, {}).permit!.to_h
+    raw = params.fetch(:patterns, {})
+    raw.to_unsafe_h.transform_values { |v| v.slice(:level, :passed) }
   end
 
   # Parses form params and creates map_progressions.

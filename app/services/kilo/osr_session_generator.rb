@@ -34,11 +34,10 @@ class Kilo::OsrSessionGenerator
   def call(phase:, seed_phase:, upper_sessions:, lower_sessions:,
            limiting_lift_upper:, limiting_lift_lower:,
            rep_scheme: nil, frequency: 4)
-
     # Cap session counts to fit within frequency (templates may provide more
     # sessions than training days, e.g. 2 upper + 2 lower for a 3x program).
-    max_upper = [(frequency + 1) / 2, upper_sessions.size].min
-    max_lower = [frequency - max_upper, lower_sessions.size].min
+    max_upper = [ (frequency + 1) / 2, upper_sessions.size ].min
+    max_lower = [ frequency - max_upper, lower_sessions.size ].min
     effective_upper = upper_sessions.first(max_upper)
     effective_lower = lower_sessions.first(max_lower)
 
@@ -241,13 +240,13 @@ class Kilo::OsrSessionGenerator
   end
 
   def parse_rep_scheme(rep_scheme)
-    return [nil, nil] unless rep_scheme.present?
+    return [ nil, nil ] unless rep_scheme.present?
 
     if match = rep_scheme.match(/^(\d+)x(\d+)$/)
-      [match[1].to_i, match[2].to_i]
+      [ match[1].to_i, match[2].to_i ]
     else
       parts = rep_scheme.split(",").map(&:strip)
-      [parts.size, rep_scheme]
+      [ parts.size, rep_scheme ]
     end
   end
 

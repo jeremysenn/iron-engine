@@ -54,7 +54,7 @@ class Kilo::MacrocycleBuilder
       templates = KiloMacrocycleTemplate.where(limiting_lift_combo: "balanced")
     end
 
-    weeks_per_meso = mesocycle_weeks || [3, 3, 3, 3]
+    weeks_per_meso = mesocycle_weeks || [ 3, 3, 3, 3 ]
 
     # Build 4 mesocycles with custom week lengths
     running_week = 0

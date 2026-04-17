@@ -16,15 +16,15 @@
 #
 class Kilo::PeriodizationEngine
   MODEL_MAP = {
-    ["novice", "low"] => "1.1",
-    ["novice", "medium"] => "1.2",
-    ["novice", "high"] => "1.3",
-    ["intermediate", "low"] => "2.1",
-    ["intermediate", "medium"] => "2.2",
-    ["intermediate", "high"] => "2.3",
-    ["advanced", "low"] => "3.1",
-    ["advanced", "medium"] => "3.2",
-    ["advanced", "high"] => "3.3"
+    [ "novice", "low" ] => "1.1",
+    [ "novice", "medium" ] => "1.2",
+    [ "novice", "high" ] => "1.3",
+    [ "intermediate", "low" ] => "2.1",
+    [ "intermediate", "medium" ] => "2.2",
+    [ "intermediate", "high" ] => "2.3",
+    [ "advanced", "low" ] => "3.1",
+    [ "advanced", "medium" ] => "3.2",
+    [ "advanced", "high" ] => "3.3"
   }.freeze
 
   VALID_GOALS = %w[hypertrophy absolute_strength relative_strength power balanced optimizing_strength_ratios].freeze
@@ -49,7 +49,7 @@ class Kilo::PeriodizationEngine
     raise InvalidTrainingLevel, "Invalid training level: #{training_level}" unless VALID_LEVELS.include?(training_level)
     raise InvalidVolumeTolerance, "Invalid volume tolerance: #{volume}" unless VALID_VOLUMES.include?(volume)
 
-    model_id = MODEL_MAP[[training_level, volume]]
+    model_id = MODEL_MAP[[ training_level, volume ]]
 
     rep_schemes = KiloPeriodizationModel.where(
       model_id: model_id,

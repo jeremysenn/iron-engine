@@ -1,0 +1,10 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "a33f16cf7cb195b94a3164c32e0ad3ae446e222fa2479bac797d48e9e2d61ed0",
+      "note": "URL is guarded by https? regex check in the view conditional"
+    }
+  ],
+  "updated": "2026-04-17",
+  "brakeman_version": "8.0.4"
+}

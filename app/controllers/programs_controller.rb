@@ -33,7 +33,7 @@ class ProgramsController < ApplicationController
     volume = params[:volume].to_s
     macrocycle_number = (params[:macrocycle_number] || 1).to_i
 
-    model_id = Kilo::PeriodizationEngine::MODEL_MAP[[training_level, volume]]
+    model_id = Kilo::PeriodizationEngine::MODEL_MAP[[ training_level, volume ]]
     records = KiloPeriodizationModel.where(model_id: model_id, macrocycle_number: macrocycle_number).order(:phase)
 
     phases = records.map do |r|
@@ -110,7 +110,7 @@ class ProgramsController < ApplicationController
 
   def show
     @macrocycles = @program.macrocycles.includes(
-      mesocycles: { microcycles: { training_sessions: { session_exercises: [:exercise_sets, :kilo_exercise] } } }
+      mesocycles: { microcycles: { training_sessions: { session_exercises: [ :exercise_sets, :kilo_exercise ] } } }
     ).order("mesocycles.number", "microcycles.week_number")
 
     # Build regenerate params from the existing program

@@ -11,12 +11,12 @@ class Kilo::MesocycleLoading
   # Offset patterns for each loading strategy across a 3-week mesocycle.
   # Key = strategy symbol, Value = [week1_offset, week2_offset, week3_offset]
   PATTERNS = {
-    constant:      [0, 0, 0],
-    ascending:     [-1, 0, +1],
-    descending:    [+1, 0, -1],
-    step:          [0, +1, -1],
-    peaking:       [+2, 0, -2],
-    concentrated:  [+1, +1, -1]
+    constant:      [ 0, 0, 0 ],
+    ascending:     [ -1, 0, +1 ],
+    descending:    [ +1, 0, -1 ],
+    step:          [ 0, +1, -1 ],
+    peaking:       [ +2, 0, -2 ],
+    concentrated:  [ +1, +1, -1 ]
   }.freeze
 
   # Returns the adjusted set count for a given week within a mesocycle.
@@ -36,6 +36,6 @@ class Kilo::MesocycleLoading
     offset = offsets[week_in_meso - 1]
     return base_sets unless offset
 
-    [base_sets + offset, 1].max
+    [ base_sets + offset, 1 ].max
   end
 end

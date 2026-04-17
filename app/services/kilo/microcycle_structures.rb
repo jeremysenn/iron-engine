@@ -85,7 +85,7 @@ module Kilo::MicrocycleStructures
     when 2
       week_number.odd? ? MICRO_1_2X : MICRO_2_2X
     when 3
-      [MICRO_1_3X, MICRO_2_3X, MICRO_3_3X, MICRO_4_3X][(week_number - 1) % 4]
+      [ MICRO_1_3X, MICRO_2_3X, MICRO_3_3X, MICRO_4_3X ][(week_number - 1) % 4]
     else # 4 or 5
       week_number.odd? ? MICRO_1_4X : MICRO_2_4X
     end

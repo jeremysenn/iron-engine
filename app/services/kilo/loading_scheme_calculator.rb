@@ -31,14 +31,14 @@ class Kilo::LoadingSchemeCalculator
   # Others use prefix match since their variations (grip, stance) are
   # still the same fundamental movement.
   PRIME_EIGHT_PATTERNS = [
-    [/\ASquat\z/, :squat],
-    [/\AFront Squat/, :front_squat],
-    [/\ADeadlift\z/, :deadlift],
-    [/\ABench Press/, :bench_press],
-    [/\AOverhead Press/, :overhead_press],
-    [/\AIncline Press/, :incline_press],
-    [/\ADip/, :dip],
-    [/\AChin-Up/, :chin_up]
+    [ /\ASquat\z/, :squat ],
+    [ /\AFront Squat/, :front_squat ],
+    [ /\ADeadlift\z/, :deadlift ],
+    [ /\ABench Press/, :bench_press ],
+    [ /\AOverhead Press/, :overhead_press ],
+    [ /\AIncline Press/, :incline_press ],
+    [ /\ADip/, :dip ],
+    [ /\AChin-Up/, :chin_up ]
   ].freeze
 
   # Populates target weights for an entire program (called at generation time).

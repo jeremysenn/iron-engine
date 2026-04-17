@@ -41,6 +41,6 @@ class WorkoutsController < ApplicationController
   end
 
   def sets_params
-    params.require(:sets).permit!.to_h
+    params.require(:sets).to_unsafe_h.transform_values { |v| v.slice("actual_weight", "actual_reps") }
   end
 end

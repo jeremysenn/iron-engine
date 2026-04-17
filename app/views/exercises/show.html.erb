@@ -47,7 +47,7 @@
           <td class="py-2 font-medium"><%= @exercise.rotation_group.titleize %></td>
         </tr>
         <% end %>
-        <% if @exercise.video_url.present? %>
+        <% if @exercise.video_url.present? && @exercise.video_url.match?(%r{\Ahttps?://}i) %>
         <tr class="border-b border-slate-100">
           <td class="py-2 text-slate-500">Video</td>
           <td class="py-2">

@@ -130,9 +130,9 @@ class Kilo::ProgramGeneratorTest < ActiveSupport::TestCase
     ].each { |a| KiloOptimalRatio.find_or_create_by!(a) }
 
     # Seed all 4 phases for each model needed by tests
-    { "2.2" => { acc: ["5x7", 70.0], int: ["5x5", 80.0], acc2: ["4x10", 74.0], int2: ["6x4", 85.0] },
-      "2.1" => { acc: ["4x10", 65.0], int: ["4x6", 82.0], acc2: ["5x9", 76.0], int2: ["5x4", 85.0] },
-      "2.3" => { acc: ["4x8", 65.0], int: ["4x4", 85.0], acc2: ["5x7", 78.0], int2: ["6x3", 90.0] }
+    { "2.2" => { acc: [ "5x7", 70.0 ], int: [ "5x5", 80.0 ], acc2: [ "4x10", 74.0 ], int2: [ "6x4", 85.0 ] },
+      "2.1" => { acc: [ "4x10", 65.0 ], int: [ "4x6", 82.0 ], acc2: [ "5x9", 76.0 ], int2: [ "5x4", 85.0 ] },
+      "2.3" => { acc: [ "4x8", 65.0 ], int: [ "4x4", 85.0 ], acc2: [ "5x7", 78.0 ], int2: [ "6x3", 90.0 ] }
     }.each do |mid, phases|
       KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :accumulation) { |m| m.rep_scheme = phases[:acc][0]; m.intensity_pct = phases[:acc][1] }
       KiloPeriodizationModel.find_or_create_by!(model_id: mid, macrocycle_number: 1, phase: :intensification) { |m| m.rep_scheme = phases[:int][0]; m.intensity_pct = phases[:int][1] }

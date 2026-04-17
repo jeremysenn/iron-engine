@@ -50,7 +50,7 @@ class PrimeEightAssessmentsController < ApplicationController
           current_ratio: data[:current_ratio],
           optimal_ratio: data[:optimal_ratio],
           discrepancy: data[:discrepancy],
-          is_limiting: [exercise == @ratio_result.limiting_upper, exercise == @ratio_result.limiting_lower].any?
+          is_limiting: [ exercise == @ratio_result.limiting_upper, exercise == @ratio_result.limiting_lower ].any?
         )
       end
 
@@ -114,7 +114,7 @@ class PrimeEightAssessmentsController < ApplicationController
           current_ratio: data[:current_ratio],
           optimal_ratio: data[:optimal_ratio],
           discrepancy: data[:discrepancy],
-          is_limiting: [exercise == @ratio_result.limiting_upper, exercise == @ratio_result.limiting_lower].any?
+          is_limiting: [ exercise == @ratio_result.limiting_upper, exercise == @ratio_result.limiting_lower ].any?
         )
       end
     end

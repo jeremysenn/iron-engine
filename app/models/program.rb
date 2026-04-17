@@ -26,7 +26,7 @@ class Program < ApplicationRecord
   validates :macrocycle_number, presence: true, inclusion: { in: 1..16 }
 
   scope :with_full_structure, -> {
-    includes(macrocycles: { mesocycles: { microcycles: { training_sessions: { session_exercises: [:exercise_sets, :kilo_exercise] } } } })
+    includes(macrocycles: { mesocycles: { microcycles: { training_sessions: { session_exercises: [ :exercise_sets, :kilo_exercise ] } } } })
   }
 
   def archive!

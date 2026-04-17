@@ -29,30 +29,30 @@ module RadarChartHelper
         angle = (2 * Math::PI * i / n) - (Math::PI / 2)
         val = data[scale_key].to_f
         r = (val / max_val) * radius
-        [(cx + r * Math.cos(angle)).round(1), (cy + r * Math.sin(angle)).round(1)]
+        [ (cx + r * Math.cos(angle)).round(1), (cy + r * Math.sin(angle)).round(1) ]
       end
     }
 
     # Find the maximum ratio value for scaling
-    max_val = entries.map { |_, d| [d[:current_ratio].to_f, d[:optimal_ratio].to_f].max }.max
-    max_val = [max_val, 130].max # At least 130% for deadlift scale
+    max_val = entries.map { |_, d| [ d[:current_ratio].to_f, d[:optimal_ratio].to_f ].max }.max
+    max_val = [ max_val, 130 ].max # At least 130% for deadlift scale
 
     optimal_points = points_for.call(entries, :optimal_ratio, max_val)
     actual_points = points_for.call(entries, :current_ratio, max_val)
 
     # Grid rings at 25%, 50%, 75%, 100% of max
-    grid_rings = [0.25, 0.5, 0.75, 1.0].map do |pct|
+    grid_rings = [ 0.25, 0.5, 0.75, 1.0 ].map do |pct|
       r = pct * radius
       entries.each_with_index.map do |(_, _), i|
         angle = (2 * Math::PI * i / n) - (Math::PI / 2)
-        [(cx + r * Math.cos(angle)).round(1), (cy + r * Math.sin(angle)).round(1)]
+        [ (cx + r * Math.cos(angle)).round(1), (cy + r * Math.sin(angle)).round(1) ]
       end
     end
 
     # Grid lines from center to each vertex
     axis_endpoints = entries.each_with_index.map do |(_, _), i|
       angle = (2 * Math::PI * i / n) - (Math::PI / 2)
-      [(cx + radius * Math.cos(angle)).round(1), (cy + radius * Math.sin(angle)).round(1)]
+      [ (cx + radius * Math.cos(angle)).round(1), (cy + radius * Math.sin(angle)).round(1) ]
     end
 
     # Label positions

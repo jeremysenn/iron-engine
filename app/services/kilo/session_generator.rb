@@ -30,7 +30,6 @@ class Kilo::SessionGenerator
   def call(split_structure:, rep_scheme: nil, intensity_pct: nil,
            microcycle_structure: nil, exercise_overrides: {},
            movement_result: nil, methods: [], phase: :accumulation, **_ignored)
-
     sessions = []
 
     split_structure.each do |day, session_type|
@@ -171,10 +170,10 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "squat")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [4, true]  then "Squat - Goblet - 30° Heel Elevation"
-    when [4, false] then "Squat - To Box - Top Range - BB"
-    when [3, true]  then "Squat - Goblet - 10° Heel Elevation"
+    case [ tested_level, passed ]
+    when [ 4, true ]  then "Squat - Goblet - 30° Heel Elevation"
+    when [ 4, false ] then "Squat - To Box - Top Range - BB"
+    when [ 3, true ]  then "Squat - Goblet - 10° Heel Elevation"
     end
   end
 
@@ -232,10 +231,10 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "split_squat")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, true]  then "Split Squat - Front Foot Elevated 12\" - Low Pulley"
-    when [3, false] then "Backward Sled Drag"
-    when [2, true]  then "Split Squat - Front Foot Elevated 6\" - Low Pulley"
+    case [ tested_level, passed ]
+    when [ 3, true ]  then "Split Squat - Front Foot Elevated 12\" - Low Pulley"
+    when [ 3, false ] then "Backward Sled Drag"
+    when [ 2, true ]  then "Split Squat - Front Foot Elevated 6\" - Low Pulley"
     end
   end
 
@@ -250,11 +249,11 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "step_up")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, true]  then "Step-Up - Side"
-    when [3, false] then "Backward Sled Drag"
-    when [2, true]  then "Step-Up - Front"
-    when [1, true]  then "Step-Up - 40° Heel Elevation"
+    case [ tested_level, passed ]
+    when [ 3, true ]  then "Step-Up - Side"
+    when [ 3, false ] then "Backward Sled Drag"
+    when [ 2, true ]  then "Step-Up - Front"
+    when [ 1, true ]  then "Step-Up - 40° Heel Elevation"
     end
   end
 
@@ -268,8 +267,8 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "seated_goodmorning")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, false] then "Back Extension - Incline - 40°"
+    case [ tested_level, passed ]
+    when [ 3, false ] then "Back Extension - Incline - 40°"
     end
   end
 
@@ -332,10 +331,10 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "overhead_press")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, true]  then "Press - Seated - Arnold - DB"
-    when [3, false] then "Press - High Incline - DB"
-    when [2, true]  then "Press - Seated - Unsupported - DB"
+    case [ tested_level, passed ]
+    when [ 3, true ]  then "Press - Seated - Arnold - DB"
+    when [ 3, false ] then "Press - High Incline - DB"
+    when [ 2, true ]  then "Press - Seated - Unsupported - DB"
     end
   end
 
@@ -352,10 +351,10 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "row")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, true]  then "Pulldown - Lean 45° - Close Grip - Semi-Supinated"
-    when [3, false] then "Scapula Retraction - Facing - High Pulley - One-Arm"
-    when [2, true]  then "Pulldown - Lean 45° - Medium Grip - Neutral"
+    case [ tested_level, passed ]
+    when [ 3, true ]  then "Pulldown - Lean 45° - Close Grip - Semi-Supinated"
+    when [ 3, false ] then "Scapula Retraction - Facing - High Pulley - One-Arm"
+    when [ 2, true ]  then "Pulldown - Lean 45° - Medium Grip - Neutral"
     end
   end
 
@@ -372,10 +371,10 @@ class Kilo::SessionGenerator
     tested_level, passed = map_tested_level(movement_result, "push_up")
     return nil unless tested_level
 
-    case [tested_level, passed]
-    when [3, true]  then "Push-Up - Incline"
-    when [3, false] then "Press - 25° Decline - DB"
-    when [2, true]  then "Push-Up - Kneeling"
+    case [ tested_level, passed ]
+    when [ 3, true ]  then "Push-Up - Incline"
+    when [ 3, false ] then "Press - 25° Decline - DB"
+    when [ 2, true ]  then "Push-Up - Kneeling"
     end
   end
 
@@ -427,21 +426,21 @@ class Kilo::SessionGenerator
   # Returns [tested_level, passed] or [nil, nil] if no data.
   def map_tested_level(movement_result, pattern)
     data = movement_result.levels[pattern]
-    return [nil, nil] unless data&.dig(:all_entries)&.any?
+    return [ nil, nil ] unless data&.dig(:all_entries)&.any?
 
     entry = data[:all_entries].max_by { |e| e[:level] }
-    [entry[:level], entry[:passed]]
+    [ entry[:level], entry[:passed] ]
   end
 
   def parse_rep_scheme(rep_scheme)
-    return [nil, nil] unless rep_scheme.present?
+    return [ nil, nil ] unless rep_scheme.present?
 
     if match = rep_scheme.match(/^(\d+)x(\d+)$/)
-      [match[1].to_i, match[2].to_i]
+      [ match[1].to_i, match[2].to_i ]
     else
       # Complex rep scheme like "12,10,8,6" - use the count as sets
       parts = rep_scheme.split(",").map(&:strip)
-      [parts.size, rep_scheme]
+      [ parts.size, rep_scheme ]
     end
   end
 

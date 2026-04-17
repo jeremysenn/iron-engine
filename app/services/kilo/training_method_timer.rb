@@ -40,9 +40,9 @@ class Kilo::TrainingMethodTimer
       value: "#{phase} phase, #{goal} goal, #{training_level} level",
       decision: if method_list.any?
         "Assigned #{method_list.size} methods: #{method_list.map(&:name).join(', ')}"
-      else
+                else
         "No training methods seeded yet. Methods will use defaults."
-      end
+                end
     )
 
     result

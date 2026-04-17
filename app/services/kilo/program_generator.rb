@@ -58,7 +58,7 @@ class Kilo::ProgramGenerator
     @macrocycle_number = macrocycle_number
     @acc_split = acc_split
     @int_split = int_split
-    @mesocycle_weeks = mesocycle_weeks || [3, 3, 3, 3]
+    @mesocycle_weeks = mesocycle_weeks || [ 3, 3, 3, 3 ]
     @osr_limiting_upper = osr_limiting_upper
     @osr_limiting_lower = osr_limiting_lower
     @loading_strategies = loading_strategies || {}
@@ -390,7 +390,7 @@ class Kilo::ProgramGenerator
                 kilo_exercise_id: ex_data[:kilo_exercise_id],
                 exercise_name: ex_data[:exercise_name],
                 position: ex_data[:position],
-                sets: [sets_count, 1].max,
+                sets: [ sets_count, 1 ].max,
                 tempo: ex_data[:tempo],
                 rest_seconds: ex_data[:rest_seconds] || 60,
                 group: ex_data[:group],
@@ -399,9 +399,9 @@ class Kilo::ProgramGenerator
               )
 
               # Parse per-set reps: "8,8,6,6,4,4" → [8,8,6,6,4,4], "3x12" → [12,12,12]
-              rep_values = parse_per_set_reps(ex_data[:target_reps].to_s, [sets_count, 1].max)
+              rep_values = parse_per_set_reps(ex_data[:target_reps].to_s, [ sets_count, 1 ].max)
 
-              [sets_count, 1].max.times do |i|
+              [ sets_count, 1 ].max.times do |i|
                 session_exercise.exercise_sets.create!(
                   set_number: i + 1,
                   target_reps: rep_values[i] || rep_values.last || 0,
@@ -424,30 +424,30 @@ class Kilo::ProgramGenerator
   #   "12"          → [12]
   #   "6-10"        → [6] (range: use low end)
   def parse_per_set_reps(rep_string, sets_count)
-    return [1] unless rep_string.present?
+    return [ 1 ] unless rep_string.present?
 
     str = rep_string.to_s.strip
 
     # Handle "Max" — default to a reasonable rep count
-    return [1] if str.casecmp("max").zero?
+    return [ 1 ] if str.casecmp("max").zero?
 
     # Handle Con-Ecc combo notation: "4+2" → 6 total
     if str.include?("+")
       total = str.split("+").map(&:to_i).sum
-      return [total]
+      return [ total ]
     end
 
     if str.include?(",")
       reps = str.split(",").map { |r| r.strip.to_i }
       # Ensure no zeros from non-numeric parts
-      reps.map { |r| [r, 1].max }
+      reps.map { |r| [ r, 1 ].max }
     elsif str.include?("x")
       count, reps = str.split("x").map(&:to_i)
-      Array.new([count, 1].max, [reps, 1].max)
+      Array.new([ count, 1 ].max, [ reps, 1 ].max)
     elsif str.include?("-")
-      [[str.split("-").first.to_i, 1].max]
+      [ [ str.split("-").first.to_i, 1 ].max ]
     else
-      [[str.to_i, 1].max]
+      [ [ str.to_i, 1 ].max ]
     end
   end
 

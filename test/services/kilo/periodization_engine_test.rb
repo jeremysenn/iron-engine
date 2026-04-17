@@ -18,15 +18,15 @@ class Kilo::PeriodizationEngineTest < ActiveSupport::TestCase
 
   test "all 9 model combinations map correctly" do
     expected = {
-      ["novice", "low"] => "1.1",
-      ["novice", "medium"] => "1.2",
-      ["novice", "high"] => "1.3",
-      ["intermediate", "low"] => "2.1",
-      ["intermediate", "medium"] => "2.2",
-      ["intermediate", "high"] => "2.3",
-      ["advanced", "low"] => "3.1",
-      ["advanced", "medium"] => "3.2",
-      ["advanced", "high"] => "3.3"
+      [ "novice", "low" ] => "1.1",
+      [ "novice", "medium" ] => "1.2",
+      [ "novice", "high" ] => "1.3",
+      [ "intermediate", "low" ] => "2.1",
+      [ "intermediate", "medium" ] => "2.2",
+      [ "intermediate", "high" ] => "2.3",
+      [ "advanced", "low" ] => "3.1",
+      [ "advanced", "medium" ] => "3.2",
+      [ "advanced", "high" ] => "3.3"
     }
 
     expected.each do |(level, vol), model_id|

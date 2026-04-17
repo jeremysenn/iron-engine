@@ -166,11 +166,11 @@ def stamp_training_history!(program, mode: :partial, session_count: 3, start_dat
       se.exercise_sets.each do |es|
         # Small per-set variance: +/- 2.5 lbs
         actual_weight = (progressed_weight + rand(-1..1) * 2.5).round(1)
-        actual_weight = [actual_weight, 5.0].max
+        actual_weight = [ actual_weight, 5.0 ].max
 
         target_reps = es.target_reps.to_i
         # Hit target reps most of the time, occasionally 1 under
-        actual_reps = [target_reps + rand(-1..0), 1].max
+        actual_reps = [ target_reps + rand(-1..0), 1 ].max
 
         es.update!(actual_weight: actual_weight, actual_reps: actual_reps)
       end
@@ -252,7 +252,7 @@ MAP_DATA_INTERMEDIATE = {
   push_up:            { level: 3, passed: true,  exercise_name: nil },
   external_rotation:  { level: 0, passed: false, exercise_name: "both_rom" },
   trap_3_raise:       { level: 0, passed: false, exercise_name: nil },
-  prone_lateral_raise: { level: 0, passed: true, exercise_name: nil },
+  prone_lateral_raise: { level: 0, passed: true, exercise_name: nil }
 }.freeze
 
 # Advanced client: passes most at high levels
@@ -271,7 +271,7 @@ MAP_DATA_ADVANCED = {
   push_up:            { level: 3, passed: true,  exercise_name: nil },
   external_rotation:  { level: 0, passed: true,  exercise_name: nil },
   trap_3_raise:       { level: 0, passed: true,  exercise_name: nil },
-  prone_lateral_raise: { level: 0, passed: true, exercise_name: nil },
+  prone_lateral_raise: { level: 0, passed: true, exercise_name: nil }
 }.freeze
 
 # ── PrimeEight Lift Data ──────────────────────────────────────────────
@@ -287,7 +287,7 @@ PRIME_EIGHT_LOWER_LIMITING = {
   overhead_press: { weight: 115, reps: 5 },
   incline_press:  { weight: 155, reps: 5 },
   dip:            { weight: 225, reps: 5 },  # BW + load
-  chin_up:        { weight: 200, reps: 5 },  # BW + load
+  chin_up:        { weight: 200, reps: 5 }  # BW + load
 }.freeze
 
 # Client 5: upper-body limiting (overhead_press clearly weakest in upper region)
@@ -299,7 +299,7 @@ PRIME_EIGHT_UPPER_LIMITING = {
   overhead_press: { weight: 75,  reps: 5 },  # Deliberately low → limiting upper
   incline_press:  { weight: 145, reps: 5 },
   dip:            { weight: 215, reps: 5 },
-  chin_up:        { weight: 185, reps: 5 },
+  chin_up:        { weight: 185, reps: 5 }
 }.freeze
 
 # Client 6: OSR novice — moderate numbers, small imbalances (no extreme gaps)
@@ -318,7 +318,7 @@ PRIME_EIGHT_NOVICE_OSR = {
   overhead_press: { weight: 105, reps: 5 },
   incline_press:  { weight: 130, reps: 5 },
   dip:            { weight: 165, reps: 5 },
-  chin_up:        { weight: 125, reps: 5 },
+  chin_up:        { weight: 125, reps: 5 }
 }.freeze
 
 # ── Client Definitions ─────────────────────────────────────────────────
@@ -415,7 +415,7 @@ CLIENTS = [
       { goal: :balanced, volume: :low, frequency: 4, macrocycle_number: 1,
         use_map: false, history_sessions: 3 }
     ]
-  },
+  }
 ].freeze
 
 # ── Seed Each Client ───────────────────────────────────────────────────
@@ -496,7 +496,7 @@ CLIENTS.each do |defn|
         volume: prior[:volume].to_s,
         frequency: prior[:frequency],
         macrocycle_number: prior[:macrocycle_number] || 1,
-        mesocycle_weeks: [3, 3, 3, 3],
+        mesocycle_weeks: [ 3, 3, 3, 3 ],
         map_assessment: prior_map,
         loading_strategies: DEFAULT_LOADING
       )
@@ -518,7 +518,7 @@ CLIENTS.each do |defn|
     volume: defn[:volume].to_s,
     frequency: defn[:frequency],
     macrocycle_number: defn[:macrocycle_number] || 1,
-    mesocycle_weeks: [3, 3, 3, 3],
+    mesocycle_weeks: [ 3, 3, 3, 3 ],
     map_assessment: map_assessment,
     loading_strategies: DEFAULT_LOADING
   )
