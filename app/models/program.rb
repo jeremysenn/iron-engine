@@ -33,7 +33,23 @@ class Program < ApplicationRecord
     update!(status: :archived, archived_at: Time.current)
   end
 
+  # Returns the effective A-series loading method, resolving nil to the
+  # training-age default: novice => constant, intermediate/advanced => step.
+  def a_series_loading_method_resolved
+    return a_series_loading_method if a_series_loading_method.present?
+
+    novice? ? "constant" : "step"
+  end
+
   def map_applied?
     generation_metadata&.dig("map_applied") == true
+  end
+
+  def prescribed_tonnage
+    macrocycles.sum(&:prescribed_tonnage)
+  end
+
+  def actual_tonnage
+    macrocycles.sum(&:actual_tonnage)
   end
 end

@@ -94,7 +94,8 @@ class ProgramsController < ApplicationController
       map_assessment: params[:apply_map] == "1" ? @client.map_assessments.order(assessed_at: :desc).first : nil,
       osr_limiting_upper: params[:osr_limiting_upper],
       osr_limiting_lower: params[:osr_limiting_lower],
-      loading_strategies: loading_strategies
+      loading_strategies: loading_strategies,
+      a_series_loading_method: params[:a_series_loading_method]
     )
 
     redirect_to client_program_path(@client, @program), notice: "Program generated."
@@ -127,7 +128,8 @@ class ProgramsController < ApplicationController
       int1_weeks: meso_weeks[1] || 3,
       acc2_weeks: meso_weeks[2] || 3,
       int2_weeks: meso_weeks[3] || 3,
-      apply_map: metadata["map_applied"] ? "1" : "0"
+      apply_map: metadata["map_applied"] ? "1" : "0",
+      a_series_loading_method: @program.a_series_loading_method
     }
 
     # Include per-mesocycle loading strategies for regeneration

@@ -46,4 +46,12 @@ class Mesocycle < ApplicationRecord
 
     record.rep_scheme.match?(/^\d+x\d+$/)
   end
+
+  def prescribed_tonnage
+    microcycles.sum(&:prescribed_tonnage)
+  end
+
+  def actual_tonnage
+    microcycles.sum(&:actual_tonnage)
+  end
 end

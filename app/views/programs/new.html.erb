@@ -63,6 +63,21 @@
     </div>
   </div>
 
+  <%# A-Series Loading Method %>
+  <% default_a_loading = @training_level == "novice" ? "constant" : "step" %>
+  <% preset_a_loading = params[:a_series_loading_method].presence || default_a_loading %>
+  <div class="max-w-xs">
+    <label class="block text-sm font-medium text-slate-500 mb-1">A-Series Loading Method</label>
+    <select name="a_series_loading_method" id="a-series-loading-select" class="<%= sc %>">
+      <option value="constant" <%= 'selected' if preset_a_loading == 'constant' %>>Constant Loading</option>
+      <option value="step" <%= 'selected' if preset_a_loading == 'step' %>>Step Loading</option>
+    </select>
+    <p class="text-xs text-slate-400 mt-1">
+      Default for <%= @training_level %> clients: <strong><%= default_a_loading.capitalize %> Loading</strong>.
+      Affects only A-series exercises with uniform reps.
+    </p>
+  </div>
+
   <%# OSR Limiting Lifts Selection %>
   <% default_upper = @limiting_lifts&.dig(:upper)&.to_s %>
   <% default_lower = @limiting_lifts&.dig(:lower)&.to_s %>

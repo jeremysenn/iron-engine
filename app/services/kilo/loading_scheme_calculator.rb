@@ -5,13 +5,15 @@
 # logged set it estimates the client's current 1RM, then derives the
 # appropriate weight for the prescribed reps.
 #
-# Loading strategies:
-#   Step loading  — A-series, Intermediate/Advanced, uniform reps only.
+# Loading strategies (A-series only; B/C-series always use constant):
+#   Step loading  — A-series, uniform reps, when program's resolved
+#                   loading method is "step" (default for intermediate/advanced).
 #                   Top set = estimated RM for target reps.
 #                   Each prior set drops ~2.5%.
 #
-#   Constant loading — everything else (B/C-series, Novice A-series,
-#                      variable rep schemes like 8,8,6,6,4,4).
+#   Constant loading — A-series when program's resolved loading method is
+#                      "constant" (default for novice), or variable rep schemes,
+#                      or B/C-series.
 #                      Every set uses the estimated RM for that set's
 #                      target reps.
 #
@@ -43,6 +45,7 @@ class Kilo::LoadingSchemeCalculator
   def call(program)
     @client = program.client
     @training_level = program.training_level
+    @a_series_loading_method = program.a_series_loading_method_resolved
     @prime_eight_e1rms = load_prime_eight_e1rms
 
     program.macrocycles.includes(
@@ -72,6 +75,7 @@ class Kilo::LoadingSchemeCalculator
     program = training_session.microcycle.mesocycle.macrocycle.program
     @client = program.client
     @training_level = program.training_level
+    @a_series_loading_method = program.a_series_loading_method_resolved
     @prime_eight_e1rms = load_prime_eight_e1rms
 
     # Build a lookup of logged exercises: { exercise_key => session_exercise }
@@ -128,7 +132,7 @@ class Kilo::LoadingSchemeCalculator
 
     is_a_series = session_exercise.position.start_with?("A")
     uniform_reps = exercise_sets.map(&:target_reps).uniq.size == 1
-    use_step_loading = is_a_series && @training_level != "novice" && uniform_reps
+    use_step_loading = is_a_series && uniform_reps && @a_series_loading_method == "step"
 
     if use_step_loading
       apply_step_loading(exercise_sets, e1rm)

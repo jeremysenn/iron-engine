@@ -1,13 +1,44 @@
 <%= page_header @client.full_name do %>
   <div class="flex items-center gap-3">
-    <%= btn_primary "Regenerate", new_client_program_path(@client, @regenerate_params) %>
+    <% if @program.active? %>
+      <%= btn_primary "Regenerate", new_client_program_path(@client, @regenerate_params) %>
+    <% end %>
     <%= btn_secondary "Back to Client", client_path(@client) %>
   </div>
 <% end %>
 
+<% if @program.archived? %>
+  <div class="mb-4 px-4 py-3 rounded-md border border-amber-200 bg-amber-50 text-sm text-amber-800 font-['JetBrains_Mono',monospace]">
+    Archived on <%= @program.archived_at&.strftime("%B %-d, %Y") %>
+  </div>
+<% end %>
+
 <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-6">
-  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · <%= @program.volume.capitalize %> Volume · Model <%= @program.periodization_model %> · Macrocycle <%= @program.macrocycle_number || 1 %> · <%= @program.split_type&.titleize || "Upper / Lower" %> · <%= @program.frequency %>x/week<% if @program.map_applied? %> · <span class="text-teal-600">MAP Applied</span><% end %>
+  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · <%= @program.volume.capitalize %> Volume · Model <%= @program.periodization_model %> · Macrocycle <%= @program.macrocycle_number || 1 %> · <%= @program.split_type&.titleize || "Upper / Lower" %> · <%= @program.frequency %>x/week · A-Series: <%= @program.a_series_loading_method_resolved.capitalize %> Loading<% if @program.map_applied? %> · <span class="text-teal-600">MAP Applied</span><% end %>
 </div>
+
+<% program_prescribed = @program.prescribed_tonnage %>
+<% program_actual = @program.actual_tonnage %>
+<% if program_prescribed > 0 || program_actual > 0 %>
+  <div class="mb-6 px-4 py-3 rounded-md border border-slate-200 bg-white">
+    <div class="flex items-center gap-4">
+      <% if program_prescribed > 0 %>
+        <div>
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Tonnage</span>
+          <p class="font-['JetBrains_Mono',monospace] text-lg font-semibold text-slate-800"><%= format_tonnage(program_prescribed) %></p>
+          <span class="text-[10px] text-slate-400">Prescribed</span>
+        </div>
+      <% end %>
+      <% if program_actual > 0 %>
+        <div class="<%= 'border-l border-slate-200 pl-4' if program_prescribed > 0 %>">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider"><%= program_prescribed > 0 ? 'Actual' : 'Total Tonnage' %></span>
+          <p class="font-['JetBrains_Mono',monospace] text-lg font-semibold text-emerald-700"><%= format_tonnage(program_actual) %></p>
+          <span class="text-[10px] text-slate-400">Logged</span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
 
 <% if @program.optimizing_strength_ratios? %>
   <div class="mb-6 px-4 py-3 rounded-md border border-indigo-200 bg-indigo-50 text-sm">
@@ -114,6 +145,14 @@
             <% end %>
             <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500"><%= mesocycle.effective_loading_strategy.titleize %> Loading</span>
           <% end %>
+          <% meso_prescribed = mesocycle.prescribed_tonnage %>
+          <% meso_actual = mesocycle.actual_tonnage %>
+          <% if meso_prescribed > 0 %>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 font-['JetBrains_Mono',monospace]"><%= format_tonnage(meso_prescribed) %> vol</span>
+          <% end %>
+          <% if meso_actual > 0 %>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 font-['JetBrains_Mono',monospace]"><%= format_tonnage(meso_actual) %> logged</span>
+          <% end %>
         </h3>
 
         <% mesocycle.microcycles.order(:week_number).each do |micro| %>
@@ -121,6 +160,14 @@
             <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50">
               Week <%= micro.week_number %>
               <span class="text-slate-400 font-normal ml-2"><%= micro.training_sessions.count %> sessions</span>
+              <% week_prescribed = micro.prescribed_tonnage %>
+              <% week_actual = micro.actual_tonnage %>
+              <% if week_prescribed > 0 %>
+                <span class="text-slate-400 font-normal ml-2 font-['JetBrains_Mono',monospace] text-xs"><%= format_tonnage(week_prescribed) %> vol</span>
+              <% end %>
+              <% if week_actual > 0 %>
+                <span class="text-emerald-500 font-normal ml-1 font-['JetBrains_Mono',monospace] text-xs"><%= format_tonnage(week_actual) %> logged</span>
+              <% end %>
             </summary>
 
             <div class="px-4 pb-3">
@@ -139,10 +186,15 @@
                         </span>
                       <% end %>
                       <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]">~<%= session.estimated_duration %></span>
+                      <% session_prescribed = session.prescribed_tonnage %>
+                      <% session_actual = session.actual_tonnage %>
+                      <% if session_prescribed > 0 %>
+                        <span class="text-[10px] text-slate-400 font-['JetBrains_Mono',monospace]"><%= format_tonnage(session_prescribed) %> vol</span>
+                      <% end %>
                     </div>
                     <div class="flex items-center gap-2">
                       <% if session.logged? %>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">Logged<%= " #{session.completed_at.strftime('%-m/%-d')}" if session.completed_at %></span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">Logged<%= " #{session.completed_at.strftime('%-m/%-d')}" if session.completed_at %><%= " · #{format_tonnage(session_actual)}" if session_actual > 0 %></span>
                       <% end %>
                       <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
                     </div>

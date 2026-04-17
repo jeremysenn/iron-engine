@@ -49,4 +49,12 @@ class TrainingSession < ApplicationRecord
   def estimated_duration
     Kilo::RestCalculator.format_duration(estimated_duration_seconds)
   end
+
+  def prescribed_tonnage
+    session_exercises.sum(&:prescribed_tonnage)
+  end
+
+  def actual_tonnage
+    session_exercises.sum(&:actual_tonnage)
+  end
 end

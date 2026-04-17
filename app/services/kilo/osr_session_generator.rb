@@ -35,10 +35,17 @@ class Kilo::OsrSessionGenerator
            limiting_lift_upper:, limiting_lift_lower:,
            rep_scheme: nil, frequency: 4)
 
+    # Cap session counts to fit within frequency (templates may provide more
+    # sessions than training days, e.g. 2 upper + 2 lower for a 3x program).
+    max_upper = [(frequency + 1) / 2, upper_sessions.size].min
+    max_lower = [frequency - max_upper, lower_sessions.size].min
+    effective_upper = upper_sessions.first(max_upper)
+    effective_lower = lower_sessions.first(max_lower)
+
     sessions = []
 
     # Build upper body sessions
-    upper_sessions.each_with_index do |session_type, idx|
+    effective_upper.each_with_index do |session_type, idx|
       session_label = :"upper_body_#{idx + 1}"
       limiting_lift = limiting_lift_for_session(session_type, limiting_lift_upper, limiting_lift_lower)
 
@@ -62,7 +69,7 @@ class Kilo::OsrSessionGenerator
     end
 
     # Build lower body sessions
-    lower_sessions.each_with_index do |session_type, idx|
+    effective_lower.each_with_index do |session_type, idx|
       session_label = :"lower_body_#{idx + 1}"
       limiting_lift = limiting_lift_for_session(session_type, limiting_lift_upper, limiting_lift_lower)
 

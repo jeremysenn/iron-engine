@@ -7,3 +7,6 @@
 #   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
+
+# Demo data: test coach with realistic clients, assessments, and programs
+load Rails.root.join("db/seeds/demo_data.rb")

@@ -10,7 +10,9 @@ class ClientsController < ApplicationController
   def show
     @assessments = @client.prime_eight_assessments.order(assessed_at: :desc)
     @map_assessments = @client.map_assessments.order(assessed_at: :desc)
-    @active_program = @client.active_program
+    @active_program = @client.programs.with_full_structure.find_by(status: :active)
+    @archived_programs = @client.programs.where(status: :archived).with_full_structure.order(archived_at: :desc)
+    @tonnage_data = @client.tonnage_over_time
   end
 
   def new

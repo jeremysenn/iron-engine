@@ -32,7 +32,136 @@
         </div>
         <%= link_to "View Program", client_program_path(@client, @active_program), class: "text-sm text-teal-600 hover:text-teal-700 font-medium" %>
       </div>
+      <% active_prescribed = @active_program.prescribed_tonnage %>
+      <% active_actual = @active_program.actual_tonnage %>
+      <% if active_prescribed > 0 || active_actual > 0 %>
+        <div class="flex items-center gap-4 mt-2 pt-2 border-t border-slate-100 font-['JetBrains_Mono',monospace] text-sm">
+          <% if active_prescribed > 0 %>
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider">Prescribed Tonnage</span>
+              <p class="font-semibold text-slate-700"><%= format_tonnage(active_prescribed) %></p>
+            </div>
+          <% end %>
+          <% if active_actual > 0 %>
+            <div class="<%= 'border-l border-slate-200 pl-4' if active_prescribed > 0 %>">
+              <span class="text-[10px] text-emerald-500 uppercase tracking-wider">Actual Tonnage</span>
+              <p class="font-semibold text-emerald-700"><%= format_tonnage(active_actual) %></p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
+  </div>
+<% end %>
+
+<% if @tonnage_data.any? %>
+  <div class="mb-8">
+    <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">Total Tonnage Over Time</h2>
+    <div class="bg-white rounded-lg border border-slate-200 p-4">
+      <canvas id="tonnage-chart" height="240"></canvas>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var rawData = <%= raw @tonnage_data.map { |date, tonnage| { date: date.to_s, tonnage: tonnage.to_f.round } }.to_json %>;
+    var labels = rawData.map(function(d) { return d.date; });
+    var values = rawData.map(function(d) { return d.tonnage; });
+
+    new Chart(document.getElementById('tonnage-chart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Actual Tonnage',
+          data: values,
+          borderColor: '#0d9488',
+          backgroundColor: 'rgba(13, 148, 136, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#0d9488',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return ctx.parsed.y.toLocaleString() + ' total tonnage';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { family: "'JetBrains Mono', monospace", size: 10 },
+              color: '#94a3b8'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              font: { family: "'JetBrains Mono', monospace", size: 10 },
+              color: '#94a3b8',
+              callback: function(value) { return value.toLocaleString(); }
+            },
+            grid: { color: 'rgba(148, 163, 184, 0.15)' }
+          }
+        }
+      }
+    });
+  });
+  </script>
+<% end %>
+
+<% if @archived_programs.any? %>
+  <div class="mb-8">
+    <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg mb-3">Program History</h2>
+    <table class="w-full">
+      <thead>
+        <tr class="border-b-2 border-slate-200">
+          <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Goal</th>
+          <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Details</th>
+          <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Tonnage</th>
+          <th class="text-left text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2">Archived</th>
+          <th class="text-right text-xs font-medium text-slate-400 uppercase tracking-wider px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @archived_programs.each do |program| %>
+          <tr class="border-b border-slate-200 hover:bg-slate-100/50">
+            <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm"><%= program.goal.titleize %></td>
+            <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm text-slate-500">
+              <%= program.training_level.capitalize %> · <%= program.volume.capitalize %> · <%= program.frequency %>x/week · Macrocycle <%= program.macrocycle_number %><% if program.map_applied? %> · <span class="text-teal-600">MAP</span><% end %>
+            </td>
+            <td class="px-4 py-3 text-right font-['JetBrains_Mono',monospace] text-sm">
+              <% arch_actual = program.actual_tonnage %>
+              <% arch_prescribed = program.prescribed_tonnage %>
+              <% if arch_actual > 0 %>
+                <span class="text-slate-700"><%= format_tonnage(arch_actual) %></span>
+              <% elsif arch_prescribed > 0 %>
+                <span class="text-slate-500"><%= format_tonnage(arch_prescribed) %></span>
+              <% else %>
+                <span class="text-slate-300">—</span>
+              <% end %>
+            </td>
+            <td class="px-4 py-3 font-['JetBrains_Mono',monospace] text-sm text-slate-500"><%= program.archived_at&.strftime("%Y-%m-%d") %></td>
+            <td class="px-4 py-3 text-right">
+              <%= link_to "View", client_program_path(@client, program), class: "text-sm text-teal-600 hover:text-teal-700" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
   </div>
 <% end %>
 
@@ -57,7 +186,7 @@
         </div>
       </div>
     <% else %>
-      <p class="text-sm text-slate-500 mb-3">Generate a magic link to share <%= @client.first_name %>'s program. They can view workouts and log their training — no account needed.</p>
+      <p class="text-sm text-slate-500 mb-3">Generate a link to share <%= @client.first_name %>'s program. They can view workouts and log their training — no account needed.</p>
       <%= button_to "Generate Share Link", client_share_token_path(@client), method: :post, class: "inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors" %>
     <% end %>
   </div>

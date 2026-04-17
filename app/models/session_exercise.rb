@@ -15,4 +15,12 @@ class SessionExercise < ApplicationRecord
   def exercise_name
     super.presence || kilo_exercise&.name || "—"
   end
+
+  def prescribed_tonnage
+    exercise_sets.sum(&:prescribed_tonnage)
+  end
+
+  def actual_tonnage
+    exercise_sets.sum(&:actual_tonnage)
+  end
 end

@@ -15,6 +15,9 @@
       <% else %>
         <span class="text-slate-700"><%= se.exercise_name %></span>
       <% end %>
+      <% if se.position.start_with?("A") %>
+        <span class="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500"><%= program.a_series_loading_method_resolved.capitalize %></span>
+      <% end %>
       <button type="button"
         onclick="openSwapModal('<%= se.id %>', '<%= j se.exercise_name %>', '<%= se.position %>', '<%= client_session_exercise_path(client, se) %>')"
         style="color: #cbd5e1;"

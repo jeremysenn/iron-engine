@@ -27,4 +27,19 @@ class Client < ApplicationRecord
   def generate_share_token!(expires_in: 90.days)
     share_tokens.create!(expires_at: expires_in.from_now)
   end
+
+  def tonnage_over_time
+    TrainingSession
+      .joins(microcycle: { mesocycle: { macrocycle: :program } })
+      .joins(session_exercises: :exercise_sets)
+      .where(programs: { client_id: id })
+      .where.not(training_sessions: { completed_at: nil })
+      .where("exercise_sets.actual_weight > 0 AND exercise_sets.actual_reps > 0")
+      .group("training_sessions.id", "training_sessions.completed_at")
+      .order("training_sessions.completed_at")
+      .pluck(
+        Arel.sql("training_sessions.completed_at"),
+        Arel.sql("SUM(exercise_sets.actual_reps * exercise_sets.actual_weight)")
+      )
+  end
 end

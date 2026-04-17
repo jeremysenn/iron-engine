@@ -50,10 +50,11 @@ class Kilo::ProgramGenerator
            map_assessment: nil,
            osr_limiting_upper: nil, osr_limiting_lower: nil,
            loading_strategies: {},
+           a_series_loading_method: nil,
            **_ignored)
     @acc_structure = acc_structure || Kilo::MicrocycleStructures::DEFAULT_ACC
     @int_structure = int_structure || Kilo::MicrocycleStructures::DEFAULT_INT
-    @split_type = split_type
+    @split_type = split_type || (frequency.to_i == 3 ? "full_body" : nil)
     @macrocycle_number = macrocycle_number
     @acc_split = acc_split
     @int_split = int_split
@@ -61,6 +62,7 @@ class Kilo::ProgramGenerator
     @osr_limiting_upper = osr_limiting_upper
     @osr_limiting_lower = osr_limiting_lower
     @loading_strategies = loading_strategies || {}
+    @a_series_loading_method = a_series_loading_method.presence
     annotations = []
 
     # Step 1: MAP assessment (optional)
@@ -357,6 +359,7 @@ class Kilo::ProgramGenerator
         macrocycle_number: macrocycle_number,
         split_type: @split_type,
         status: :active,
+        a_series_loading_method: @a_series_loading_method,
         generation_metadata: metadata
       )
 
