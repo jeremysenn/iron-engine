@@ -6,6 +6,7 @@ class ExerciseSet < ApplicationRecord
 
   def prescribed_tonnage
     weight = target_weight.to_f
+    weight = actual_weight.to_f if weight.zero?
     return 0 if weight.zero?
     target_reps.to_i * weight
   end
