@@ -1,4 +1,4 @@
-<%= form_with model: exercise, class: "space-y-4" do |f| %>
+<%= form_with model: exercise, url: (exercise.persisted? ? exercise_path(exercise) : exercises_path), class: "space-y-4" do |f| %>
   <% if exercise.errors.any? %>
     <div class="px-4 py-3 rounded-md border-l-3 border-red-600 bg-red-50 text-red-800 text-sm">
       <ul class="list-disc list-inside">
