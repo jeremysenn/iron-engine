@@ -5,15 +5,15 @@
 # logged set it estimates the client's current 1RM, then derives the
 # appropriate weight for the prescribed reps.
 #
-# Loading strategies (A-series only; B/C-series always use constant):
-#   Step loading  — A-series, uniform reps, when program's resolved
+# Loading strategies (primary exercises only; non-primary always use constant):
+#   Step loading  — Primary exercises, uniform reps, when program's resolved
 #                   loading method is "step" (default for intermediate/advanced).
 #                   Top set = estimated RM for target reps.
 #                   Each prior set drops ~2.5%.
 #
-#   Constant loading — A-series when program's resolved loading method is
-#                      "constant" (default for novice), or variable rep schemes,
-#                      or B/C-series.
+#   Constant loading — Primary exercises when program's resolved loading method
+#                      is "constant" (default for novice), or variable rep
+#                      schemes, or non-primary exercises.
 #                      Every set uses the estimated RM for that set's
 #                      target reps.
 #
@@ -65,11 +65,11 @@ class Kilo::LoadingSchemeCalculator
 
   # Recalculates target weights for future sessions after a workout is logged.
   #
-  # For A-series exercises, applies progressive overload: each set's logged
+  # For primary exercises, applies progressive overload: each set's logged
   # weight is bumped up ~2.5% (rounded to nearest 5). This uses the actual
   # per-set weights from the logged session rather than recalculating from E1RM.
   #
-  # For B/C-series exercises, recalculates from E1RM as usual.
+  # For non-primary exercises, recalculates from E1RM as usual.
   #
   def recalculate_after_logging(training_session)
     program = training_session.microcycle.mesocycle.macrocycle.program
@@ -109,7 +109,7 @@ class Kilo::LoadingSchemeCalculator
               logged_se = logged_by_key[se.kilo_exercise_id] || logged_by_key[se.exercise_name]
               next unless logged_se
 
-              if se.position.start_with?("A")
+              if se.primary_exercise?
                 apply_progressive_overload(se, logged_se)
               else
                 populate_weights(se)
@@ -130,9 +130,8 @@ class Kilo::LoadingSchemeCalculator
     exercise_sets = session_exercise.exercise_sets.order(:set_number).to_a
     return if exercise_sets.empty?
 
-    is_a_series = session_exercise.position.start_with?("A")
     uniform_reps = exercise_sets.map(&:target_reps).uniq.size == 1
-    use_step_loading = is_a_series && uniform_reps && @a_series_loading_method == "step"
+    use_step_loading = session_exercise.primary_exercise? && uniform_reps && @a_series_loading_method == "step"
 
     if use_step_loading
       apply_step_loading(exercise_sets, e1rm)
@@ -231,7 +230,7 @@ class Kilo::LoadingSchemeCalculator
     e1rm / (1 + 0.0333 * target_reps)
   end
 
-  # Progressive overload for A-series: bumps each logged set's weight up ~2.5%.
+  # Progressive overload for primary exercises: bumps each logged set's weight up ~2.5%.
   # Uses per-set actual weights from the previous session rather than E1RM.
   #
   # Step loading (Intermediate/Advanced, uniform reps):

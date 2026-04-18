@@ -238,12 +238,12 @@ class Kilo::ProgramGenerator
         )
         annotations.concat(session_result.annotations)
 
-        # Apply mesocycle loading to A-series Standard Set exercises
+        # Apply mesocycle loading to primary exercise Standard Sets
         a_sets, a_reps = @session_generator.send(:parse_rep_scheme, rep_scheme_record&.rep_scheme)
         if a_reps.is_a?(Integer) && loading_strategy.present?
           session_result.sessions.each do |session|
             session[:exercises].each do |ex|
-              next unless ex[:position].to_s.start_with?("A")
+              next unless ex[:primary_exercise]
               ex[:sets] = Kilo::MesocycleLoading.adjust_sets(
                 base_sets: a_sets,
                 strategy: loading_strategy,
@@ -395,7 +395,8 @@ class Kilo::ProgramGenerator
                 rest_seconds: ex_data[:rest_seconds] || 60,
                 group: ex_data[:group],
                 group_type: ex_data[:group_type],
-                map_adjusted: ex_data[:map_adjusted] || false
+                map_adjusted: ex_data[:map_adjusted] || false,
+                primary_exercise: ex_data[:primary_exercise] || false
               )
 
               # Parse per-set reps: "8,8,6,6,4,4" → [8,8,6,6,4,4], "3x12" → [12,12,12]

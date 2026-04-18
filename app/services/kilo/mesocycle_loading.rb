@@ -1,9 +1,9 @@
-# Adjusts A-series weekly set counts based on the mesocycle's loading strategy.
+# Adjusts primary exercise weekly set counts based on the mesocycle's loading strategy.
 #
 # Only applies when:
 #   - The mesocycle is exactly 3 weeks
-#   - The A-series uses Standard Sets (a_reps is an Integer)
-#   - The exercise position starts with "A"
+#   - The primary exercises use Standard Sets (a_reps is an Integer)
+#   - The exercise is marked as primary (A-series + B-series in Full Body)
 #
 # Returns the base_sets unchanged when conditions are not met.
 #

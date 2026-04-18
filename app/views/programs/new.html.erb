@@ -63,18 +63,18 @@
     </div>
   </div>
 
-  <%# A-Series Loading Method %>
+  <%# Primary Exercises Loading Method %>
   <% default_a_loading = @training_level == "novice" ? "constant" : "step" %>
   <% preset_a_loading = params[:a_series_loading_method].presence || default_a_loading %>
   <div class="max-w-xs">
-    <label class="block text-sm font-medium text-slate-500 mb-1">A-Series Loading Method</label>
+    <label class="block text-sm font-medium text-slate-500 mb-1">Primary Exercises Loading Method</label>
     <select name="a_series_loading_method" id="a-series-loading-select" class="<%= sc %>">
       <option value="constant" <%= 'selected' if preset_a_loading == 'constant' %>>Constant Loading</option>
       <option value="step" <%= 'selected' if preset_a_loading == 'step' %>>Step Loading</option>
     </select>
     <p class="text-xs text-slate-400 mt-1">
       Default for <%= @training_level %> clients: <strong><%= default_a_loading.capitalize %> Loading</strong>.
-      Affects only A-series exercises with uniform reps.
+      Affects primary exercises (A-series, plus B-series in Full Body) with uniform reps.
     </p>
   </div>
 
@@ -179,7 +179,7 @@
   <% loading_options = [["Constant", "constant"], ["Ascending", "ascending"], ["Descending", "descending"], ["Step", "step"], ["Peaking", "peaking"], ["Concentrated", "concentrated"]] %>
   <div id="mesocycle-loading-section" class="bg-white rounded-lg border border-slate-200 p-4">
     <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-2">Mesocycle Loading</h3>
-    <p class="text-xs text-slate-400 mb-3">Adjusts A-series set volume across weeks. Only applies to 3-week mesocycles with standard sets.</p>
+    <p class="text-xs text-slate-400 mb-3">Adjusts primary exercise set volume across weeks. Only applies to 3-week mesocycles with standard sets.</p>
     <div class="grid grid-cols-4 gap-3">
       <% [["Accumulation", "loading_strategy_1", "teal", 0, 1],
           ["Intensification", "loading_strategy_2", "amber", 0, 2],

@@ -33,7 +33,7 @@ class Program < ApplicationRecord
     update!(status: :archived, archived_at: Time.current)
   end
 
-  # Returns the effective A-series loading method, resolving nil to the
+  # Returns the effective primary exercises loading method, resolving nil to the
   # training-age default: novice => constant, intermediate/advanced => step.
   def a_series_loading_method_resolved
     return a_series_loading_method if a_series_loading_method.present?

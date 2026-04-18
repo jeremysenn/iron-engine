@@ -124,7 +124,8 @@ class Kilo::SessionGenerator
         rest_seconds: Kilo::RestCalculator.for(slot[:position], phase: phase, template_rest: slot[:rest]),
         group: slot[:group],
         group_type: slot[:group_type],
-        map_adjusted: map_adjusted
+        map_adjusted: map_adjusted,
+        primary_exercise: slot[:position].start_with?("A") || slot[:primary] == true
       }
     end
   end

@@ -14,7 +14,7 @@
 <% end %>
 
 <div class="font-['JetBrains_Mono',monospace] text-sm text-slate-500 mb-6">
-  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · <%= @program.volume.capitalize %> Volume · Model <%= @program.periodization_model %> · Macrocycle <%= @program.macrocycle_number || 1 %> · <%= @program.split_type&.titleize || "Upper / Lower" %> · <%= @program.frequency %>x/week · A-Series: <%= @program.a_series_loading_method_resolved.capitalize %> Loading<% if @program.map_applied? %> · <span class="text-teal-600">MAP Applied</span><% end %>
+  <%= @program.goal.titleize %> · <%= @program.training_level.capitalize %> · <%= @program.volume.capitalize %> Volume · Model <%= @program.periodization_model %> · Macrocycle <%= @program.macrocycle_number || 1 %> · <%= @program.split_type&.titleize || "Upper / Lower" %> · <%= @program.frequency %>x/week · Primary: <%= @program.a_series_loading_method_resolved.capitalize %> Loading<% if @program.map_applied? %> · <span class="text-teal-600">MAP Applied</span><% end %>
 </div>
 
 <% program_prescribed = @program.prescribed_tonnage %>
