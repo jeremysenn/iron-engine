@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "favicon.ico", to: redirect("/icon.png", status: 301)
+
   resource :session
   resource :registration, only: %i[new create]
   resources :passwords, param: :token
