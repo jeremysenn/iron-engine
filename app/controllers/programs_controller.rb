@@ -137,6 +137,18 @@ class ProgramsController < ApplicationController
       @regenerate_params[:"loading_strategy_#{i + 1}"] = m.loading_strategy if m.loading_strategy.present?
     end
 
+    # Preload periodization records for rep scheme display (avoids N+1 in view)
+    seed_phases = Kilo::MacrocycleBuilder::PHASE_SEQUENCE.map { |p| p[:seed_phase] }
+    @periodization_records = KiloPeriodizationModel.where(
+      model_id: @program.periodization_model,
+      macrocycle_number: @program.macrocycle_number || 1,
+      phase: seed_phases
+    ).index_by(&:phase)
+
+    # Preload exercises for swap modal (avoids query in view)
+    @available_exercises = KiloExercise.available_for(Current.user)
+      .order(:body_region, :category, :subcategory, :name)
+
     # Include OSR limiting lifts for regeneration
     if @program.optimizing_strength_ratios?
       @regenerate_params[:osr_limiting_upper] = @program.limiting_lift_upper&.to_s&.delete_prefix("upper_")

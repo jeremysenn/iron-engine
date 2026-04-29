@@ -95,11 +95,7 @@
     <div class="flex mt-0.5">
       <% mesocycles.each_with_index do |mesocycle, i| %>
         <% meso_weeks = mesocycle.microcycles.count %>
-        <% rep_record = KiloPeriodizationModel.find_by(
-             model_id: @program.periodization_model,
-             macrocycle_number: @program.macrocycle_number || 1,
-             phase: seed_phases[i]&.dig(:seed_phase)
-           ) %>
+        <% rep_record = @periodization_records[seed_phases[i]&.dig(:seed_phase).to_s] %>
         <div class="text-center font-['JetBrains_Mono',monospace] text-[10px] font-medium <%= mesocycle.accumulation? ? 'text-teal-600' : 'text-amber-600' %>" style="flex: <%= meso_weeks %>">
           <%= rep_record&.rep_scheme || "—" %>
         </div>
@@ -135,11 +131,7 @@
           <span class="inline-block w-3 h-3 rounded-sm <%= mesocycle.accumulation? ? 'bg-teal-600' : 'bg-amber-600' %>"></span>
           <%= mesocycle.phase.titleize %> <%= phase_num %>
           <% unless @program.optimizing_strength_ratios? %>
-            <% meso_rep_record = KiloPeriodizationModel.find_by(
-                 model_id: @program.periodization_model,
-                 macrocycle_number: @program.macrocycle_number || 1,
-                 phase: seed_phases[meso_index - 1]&.dig(:seed_phase)
-               ) %>
+            <% meso_rep_record = @periodization_records[seed_phases[meso_index - 1]&.dig(:seed_phase).to_s] %>
             <% if meso_rep_record&.rep_scheme.present? %>
               <span class="text-xs font-medium px-2 py-0.5 rounded-full <%= mesocycle.accumulation? ? 'bg-teal-50 text-teal-700' : 'bg-amber-50 text-amber-700' %>"><%= meso_rep_record.rep_scheme %></span>
             <% end %>
@@ -178,7 +170,7 @@
                       <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">
                         <%= %w[Mon Tue Wed Thu Fri Sat Sun][session.day] || "Day #{session.day}" %> — <%= session.session_type.titleize %>
                       </span>
-                      <% training_method = session.session_exercises.find_by("group_type IS NOT NULL")&.group_type %>
+                      <% training_method = session.session_exercises.detect { |se| se.group_type.present? }&.group_type %>
                       <% if training_method %>
                         <span class="text-[10px] px-1.5 py-0.5 rounded font-medium
                           <%= mesocycle.accumulation? ? 'bg-teal-100 text-teal-700' : 'bg-amber-100 text-amber-700' %>">
@@ -245,7 +237,7 @@
 
         <select name="kilo_exercise_id" id="swap-select" size="8"
                 class="w-full px-2 py-1 rounded border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
-          <% KiloExercise.available_for(Current.user).order(:body_region, :category, :subcategory, :name).group_by { |e|
+          <% @available_exercises.group_by { |e|
                label = e.body_region.to_s
                label += " — #{e.category}" if e.category.present?
                label += " — #{e.subcategory}" if e.subcategory.present?
