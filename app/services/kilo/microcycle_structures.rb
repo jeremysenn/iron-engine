@@ -162,6 +162,21 @@ module Kilo::MicrocycleStructures
     { "mon" => "full_body_1", "wed" => "full_body_2", "fri" => "full_body_3" }
   end
 
+  # When a 3x/week full body program uses only 2 unique workouts (ABA),
+  # alternate to BAB on even weeks so both workouts get equal exposure.
+  def self.alternate_full_body_structure(structure, week_number)
+    values = structure.values
+    unique_values = values.uniq
+    return structure unless unique_values.size == 2
+
+    return structure if week_number.odd?
+
+    counts = values.tally
+    doubled = counts.find { |_, c| c >= 2 }&.first
+    single = counts.find { |_, c| c == 1 }&.first
+    structure.transform_values { |v| v == doubled ? single : doubled }
+  end
+
   def self.upper_body_label(key) = label_for(key)
   def self.lower_body_label(key) = label_for(key)
 end

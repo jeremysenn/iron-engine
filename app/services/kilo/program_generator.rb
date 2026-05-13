@@ -223,8 +223,14 @@ class Kilo::ProgramGenerator
           split_result&.split_structure || default_split(frequency)
         end
 
+        effective_structure = if frequency == 3 && @split_type == "full_body"
+          Kilo::MicrocycleStructures.alternate_full_body_structure(meso_structure, week_num)
+        else
+          meso_structure
+        end
+
         week_split = generic_split.transform_values do |st|
-          meso_structure[st] || st
+          effective_structure[st] || st
         end
 
         session_result = @session_generator.call(
