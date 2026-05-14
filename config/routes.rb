@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   resources :clients do
     resources :map_assessments, only: %i[new create show edit update]
     resources :prime_eight_assessments, only: %i[new create show edit update]
-    resources :programs, only: %i[new create show] do
+    resources :programs, only: %i[new create show destroy] do
       collection do
         get :form_options
         get :rep_scheme_preview

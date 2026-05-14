@@ -2,7 +2,7 @@ class ProgramsController < ApplicationController
   include Scopeable
 
   before_action :find_client
-  before_action :find_program, only: %i[show edit update]
+  before_action :find_program, only: %i[show edit update destroy]
 
   def new
     @assessment = @client.prime_eight_assessments.order(assessed_at: :desc).first
@@ -162,6 +162,11 @@ class ProgramsController < ApplicationController
     if metadata["int_microcycle"].present?
       metadata["int_microcycle"].each { |k, v| @regenerate_params[:"int_structure_#{k}"] = v }
     end
+  end
+
+  def destroy
+    @program.destroy
+    redirect_to client_path(@client), notice: "Program deleted."
   end
 
   def edit
