@@ -24,7 +24,17 @@
 <% preset_macrocycle = (params[:macrocycle_number] || 1).to_i %>
 
 
-<%= form_with url: client_programs_path(@client), method: :post, class: "max-w-2xl space-y-5" do |f| %>
+<div id="generating-overlay" class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center">
+  <div class="bg-white rounded-xl shadow-xl px-8 py-6 flex flex-col items-center gap-4">
+    <svg class="animate-spin h-8 w-8 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="text-sm font-medium text-slate-700">Generating program&hellip;</p>
+  </div>
+</div>
+
+<%= form_with url: client_programs_path(@client), method: :post, class: "max-w-2xl space-y-5", id: "program-form" do |f| %>
   <% if @has_map_assessment %>
     <div class="px-4 py-3 rounded-md border border-teal-200 bg-teal-50 text-sm">
       <label class="flex items-start gap-3 cursor-pointer">
@@ -568,5 +578,16 @@ document.addEventListener('DOMContentLoaded', function() {
   updateTotalWeeks();
   updateRepSchemePreview();
   syncAllLoadingSelectors();
+
+  // Show loading overlay on form submission
+  const form = document.getElementById('program-form');
+  if (form) {
+    form.addEventListener('turbo:submit-start', function() {
+      document.getElementById('generating-overlay').classList.remove('hidden');
+    });
+    form.addEventListener('turbo:submit-end', function() {
+      document.getElementById('generating-overlay').classList.add('hidden');
+    });
+  }
 });
 </script>
