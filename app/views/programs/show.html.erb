@@ -3,7 +3,7 @@
     <% if @program.active? %>
       <%= btn_primary "Regenerate", new_client_program_path(@client, @regenerate_params) %>
     <% end %>
-    <%= button_to "Delete Program", client_program_path(@client, @program), method: :delete, class: "inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-red-600 border border-red-300 hover:bg-red-50 transition-colors", form: { data: { turbo_confirm: "Delete this program and all its training data? This cannot be undone." } } %>
+    <%= button_to "Delete Program", client_program_path(@client, @program), method: :delete, class: "inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-red-600 border border-red-300 hover:bg-red-50 transition-colors", form: { data: { turbo: false }, onsubmit: "return confirm('Delete this program and all its training data? This cannot be undone.')" } %>
     <%= btn_secondary "Back to Client", client_path(@client) %>
   </div>
 <% end %>
