@@ -50,13 +50,18 @@ class SessionExercisesController < ApplicationController
     new_name = nil
     new_kilo_id = nil
 
-    if params[:kilo_exercise_id].present?
+    # A custom name takes priority over the dropdown selection. The swap
+    # <select> always submits a kilo_exercise_id (it has no blank option, so
+    # the browser auto-selects an option), so checking it first would make a
+    # typed custom name impossible to save. This matches the form's own hint:
+    # "Custom exercise name (leave blank to use selection above)".
+    if params[:exercise_name].present?
+      new_name = params[:exercise_name].strip
+      new_kilo_id = nil
+    elsif params[:kilo_exercise_id].present?
       kilo_ex = KiloExercise.find(params[:kilo_exercise_id])
       new_name = kilo_ex.name
       new_kilo_id = kilo_ex.id
-    elsif params[:exercise_name].present?
-      new_name = params[:exercise_name]
-      new_kilo_id = nil
     end
 
     return redirect_to(client_workout_path(@client, @exercise.training_session), alert: "No exercise selected.") unless new_name
