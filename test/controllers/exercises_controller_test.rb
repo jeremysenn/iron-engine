@@ -70,6 +70,52 @@ class ExercisesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='https://www.youtube.com/watch?v=dQw4w9WgXcQ']", text: "Watch Demo"
   end
 
+  test "index renders with the search and filter controls" do
+    KiloExercise.create!(name: "My Belt Squat", user: @user, custom: true)
+
+    get exercises_path
+
+    assert_response :success
+    assert_select "#exercise-search"
+    assert_select "#exercise-filters [data-filter='custom']"
+    assert_select ".exercise-row[data-custom='true']"
+  end
+
+  test "creates a custom exercise with a demo video URL" do
+    assert_difference -> { KiloExercise.count }, 1 do
+      post exercises_path, params: { kilo_exercise: {
+        name: "Demo Move", body_region: "Upper Body", category: "Row",
+        video_url: "https://youtu.be/dQw4w9WgXcQ"
+      } }
+    end
+
+    exercise = KiloExercise.order(:created_at).last
+    assert_redirected_to exercise_path(exercise)
+    assert_equal "https://youtu.be/dQw4w9WgXcQ", exercise.video_url
+    assert exercise.custom?
+    assert_equal @user.id, exercise.user_id
+  end
+
+  test "rejects a non-YouTube demo video URL on create" do
+    assert_no_difference -> { KiloExercise.count } do
+      post exercises_path, params: { kilo_exercise: {
+        name: "Bad Demo", body_region: "Upper Body", category: "Row",
+        video_url: "https://vimeo.com/12345"
+      } }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "updates the demo video URL on the coach's own custom exercise" do
+    custom = KiloExercise.create!(name: "Belt Squat", user: @user, custom: true)
+
+    patch exercise_path(custom), params: { kilo_exercise: { video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } }
+
+    assert_redirected_to exercise_path(custom)
+    assert_equal "https://www.youtube.com/watch?v=dQw4w9WgXcQ", custom.reload.video_url
+  end
+
   private
 
   def build_session_exercise(kilo_exercise:)

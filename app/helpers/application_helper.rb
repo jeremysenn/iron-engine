@@ -37,8 +37,7 @@ module ApplicationHelper
   end
 
   def youtube_video_id(url)
-    return nil unless url.present?
-    url.to_s.split("/").last.split("?").first
+    KiloExercise.youtube_id(url)
   end
 
   def youtube_thumbnail(url, size: :small)

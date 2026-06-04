@@ -2,59 +2,134 @@
   <%= btn_primary "New Exercise", new_exercise_path %>
 <% end %>
 
-<p class="text-sm text-slate-500 mb-6"><%= @exercises.count %> exercises available</p>
+<div class="mb-4 space-y-3">
+  <input type="text" id="exercise-search" placeholder="Search by name, category, or equipment..."
+         oninput="filterExerciseDb()" autocomplete="off"
+         class="w-full px-3 py-2.5 rounded-md border border-slate-300 text-sm focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
 
-<% @grouped.each do |body_region, region_exercises| %>
-  <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg text-slate-800 mt-6 mb-3"><%= body_region || "Uncategorized" %></h2>
+  <div class="flex items-center gap-2" id="exercise-filters">
+    <% chip = "exercise-chip px-3 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-pointer" %>
+    <button type="button" data-filter="all" onclick="setExerciseFilter('all')"
+            class="<%= chip %> bg-teal-600 text-white border-teal-600">All</button>
+    <button type="button" data-filter="custom" onclick="setExerciseFilter('custom')"
+            class="<%= chip %> bg-white text-slate-600 border-slate-300 hover:bg-slate-50">My Custom</button>
+    <button type="button" data-filter="standard" onclick="setExerciseFilter('standard')"
+            class="<%= chip %> bg-white text-slate-600 border-slate-300 hover:bg-slate-50">KILO Standard</button>
+  </div>
+</div>
 
-  <% region_exercises.group_by(&:category).each do |category, cat_exercises| %>
-    <details class="border border-slate-200 rounded-md mb-2 bg-white">
-      <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between">
-        <span><%= category %></span>
-        <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= cat_exercises.count %></span>
-      </summary>
-      <div class="px-4 pb-3">
-        <% subcats = cat_exercises.group_by(&:subcategory) %>
-        <% if subcats.keys.compact.any? %>
-          <%# Has subcategories - show grouped %>
-          <% subcats.each do |subcat, exercises| %>
-            <% if subcat.present? %>
-              <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mt-3 mb-1 pt-2 border-t border-slate-100 first:border-0 first:mt-0 first:pt-0"><%= subcat %></div>
-            <% end %>
-            <% exercises.each do |exercise| %>
-              <div class="flex items-center justify-between py-1.5">
-                <div class="flex items-center gap-2">
-                  <% if (thumb = youtube_thumbnail(exercise.video_url)) %>
-                    <%= link_to exercise_path(exercise) do %>
-                      <img src="<%= thumb %>" alt="" class="w-12 h-9 rounded object-cover" loading="lazy">
-                    <% end %>
-                  <% end %>
-                  <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
-                </div>
-                <div class="flex items-center gap-2">
-                  <% if exercise.custom? %>
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
-                  <% end %>
-                  <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
-                </div>
-              </div>
-            <% end %>
-          <% end %>
-        <% else %>
-          <%# No subcategories - flat list %>
-          <% cat_exercises.each do |exercise| %>
-            <div class="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
-              <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
-              <div class="flex items-center gap-2">
-                <% if exercise.custom? %>
-                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
+<p class="text-sm text-slate-500 mb-6"><span id="exercise-count"><%= @exercises.count %></span> exercises</p>
+
+<div id="exercise-list">
+  <% @grouped.each do |body_region, region_exercises| %>
+    <div class="region-group">
+      <h2 class="font-['Satoshi',system-ui,sans-serif] font-bold text-lg text-slate-800 mt-6 mb-3"><%= body_region.presence || "Uncategorized" %></h2>
+
+      <% region_exercises.group_by(&:category).each do |category, cat_exercises| %>
+        <details class="category-group border border-slate-200 rounded-md mb-2 bg-white">
+          <summary class="px-4 py-2.5 cursor-pointer text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between">
+            <span><%= category.presence || "Uncategorized" %></span>
+            <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><span class="category-count"><%= cat_exercises.count %></span></span>
+          </summary>
+          <div class="px-4 pb-3">
+            <% cat_exercises.group_by(&:subcategory).each do |subcat, exercises| %>
+              <div class="subcat-group">
+                <% if subcat.present? %>
+                  <div class="subcat-header text-xs font-medium text-slate-400 uppercase tracking-wider mt-3 mb-1 pt-2 border-t border-slate-100"><%= subcat %></div>
                 <% end %>
-                <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
+                <% exercises.each do |exercise| %>
+                  <div class="exercise-row flex items-center justify-between py-1.5"
+                       data-name="<%= [ exercise.name, exercise.category, exercise.subcategory, exercise.equipment ].compact.join(" ").downcase %>"
+                       data-custom="<%= exercise.custom? %>">
+                    <div class="flex items-center gap-2">
+                      <% if (thumb = youtube_thumbnail(exercise.video_url)) %>
+                        <%= link_to exercise_path(exercise) do %>
+                          <img src="<%= thumb %>" alt="" class="w-12 h-9 rounded object-cover" loading="lazy">
+                        <% end %>
+                      <% end %>
+                      <%= link_to exercise.name, exercise_path(exercise), class: "text-sm text-slate-700 hover:text-teal-600" %>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <% if exercise.custom? %>
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-teal-100 text-teal-700">Custom</span>
+                      <% end %>
+                      <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= exercise.equipment %></span>
+                    </div>
+                  </div>
+                <% end %>
               </div>
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-    </details>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+    </div>
   <% end %>
-<% end %>
+</div>
+
+<p id="exercise-empty" class="hidden text-sm text-slate-500 mt-4">No exercises match your search.</p>
+
+<script>
+  var exerciseFilter = "all";
+
+  function setExerciseFilter(filter) {
+    exerciseFilter = filter;
+    document.querySelectorAll("#exercise-filters .exercise-chip").forEach(function (btn) {
+      var active = btn.dataset.filter === filter;
+      btn.classList.toggle("bg-teal-600", active);
+      btn.classList.toggle("text-white", active);
+      btn.classList.toggle("border-teal-600", active);
+      btn.classList.toggle("bg-white", !active);
+      btn.classList.toggle("text-slate-600", !active);
+      btn.classList.toggle("border-slate-300", !active);
+    });
+    filterExerciseDb();
+  }
+
+  function filterExerciseDb() {
+    var q = document.getElementById("exercise-search").value.trim().toLowerCase();
+    var filtering = q !== "" || exerciseFilter !== "all";
+    var visible = 0;
+
+    document.querySelectorAll("#exercise-list .exercise-row").forEach(function (row) {
+      var matchesText = !q || row.dataset.name.indexOf(q) !== -1;
+      var isCustom = row.dataset.custom === "true";
+      var matchesFilter = exerciseFilter === "all" ||
+        (exerciseFilter === "custom" && isCustom) ||
+        (exerciseFilter === "standard" && !isCustom);
+      var show = matchesText && matchesFilter;
+      row.style.display = show ? "" : "none";
+      if (show) visible++;
+    });
+
+    document.querySelectorAll("#exercise-list .subcat-group").forEach(function (group) {
+      var anyVisible = Array.prototype.some.call(
+        group.querySelectorAll(".exercise-row"),
+        function (r) { return r.style.display !== "none"; }
+      );
+      group.style.display = anyVisible ? "" : "none";
+    });
+
+    document.querySelectorAll("#exercise-list .category-group").forEach(function (cat) {
+      var rows = cat.querySelectorAll(".exercise-row");
+      var shown = Array.prototype.filter.call(rows, function (r) {
+        return r.style.display !== "none";
+      }).length;
+      cat.style.display = shown > 0 ? "" : "none";
+      var count = cat.querySelector(".category-count");
+      if (count) count.textContent = shown;
+      // Auto-expand while filtering so matches are visible without clicking.
+      cat.open = filtering && shown > 0;
+    });
+
+    document.querySelectorAll("#exercise-list .region-group").forEach(function (region) {
+      var anyCat = Array.prototype.some.call(
+        region.querySelectorAll(".category-group"),
+        function (c) { return c.style.display !== "none"; }
+      );
+      region.style.display = anyCat ? "" : "none";
+    });
+
+    document.getElementById("exercise-count").textContent = visible;
+    document.getElementById("exercise-empty").classList.toggle("hidden", visible > 0);
+  }
+</script>

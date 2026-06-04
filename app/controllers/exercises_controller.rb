@@ -66,6 +66,6 @@ class ExercisesController < ApplicationController
   end
 
   def exercise_params
-    params.require(:kilo_exercise).permit(:name, :body_region, :category, :subcategory, :equipment, :grip_type, :grip_width)
+    params.require(:kilo_exercise).permit(:name, :body_region, :category, :subcategory, :equipment, :grip_type, :grip_width, :video_url)
   end
 end

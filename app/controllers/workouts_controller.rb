@@ -9,6 +9,9 @@ class WorkoutsController < ApplicationController
   def show
     @exercises = @session.session_exercises.includes(:exercise_sets, :kilo_exercise).order(:position)
     @program = @session.microcycle.mesocycle.macrocycle.program
+    # Preloaded once for the per-exercise swap modals (avoids N+1 in the view).
+    @available_exercises = KiloExercise.available_for(Current.user)
+      .order(:body_region, :category, :subcategory, :name)
   end
 
   # PATCH /clients/:client_id/workouts/:training_session_id

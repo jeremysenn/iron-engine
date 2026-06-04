@@ -237,18 +237,7 @@
 
         <select name="kilo_exercise_id" id="swap-select" size="8"
                 class="w-full px-2 py-1 rounded border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
-          <% @available_exercises.group_by { |e|
-               label = e.body_region.to_s
-               label += " — #{e.category}" if e.category.present?
-               label += " — #{e.subcategory}" if e.subcategory.present?
-               label
-             }.each do |group_label, exercises| %>
-            <optgroup label="<%= group_label %>">
-              <% exercises.each do |ex| %>
-                <option value="<%= ex.id %>"><%= ex.name %></option>
-              <% end %>
-            </optgroup>
-          <% end %>
+          <%= render "exercises/swap_options", exercises: @available_exercises %>
         </select>
       </div>
 

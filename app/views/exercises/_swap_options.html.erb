@@ -1,0 +1,31 @@
+<%# Renders <optgroup>/<option> markup for an exercise swap <select>.
+    Locals:
+      exercises   - collection of KiloExercise (built-in + the coach's customs)
+      selected_id - optional kilo_exercise_id to mark selected (default nil)
+
+    The coach's custom exercises are listed first under a labeled group so they
+    are easy to find — customs created via the swap shortcut often have no
+    body_region/category and would otherwise sort under a blank heading. %>
+<% selected_id = local_assigns.fetch(:selected_id, nil) %>
+<% customs, standard = exercises.partition(&:custom?) %>
+
+<% if customs.any? %>
+  <optgroup label="My Custom Exercises">
+    <% customs.sort_by { |e| e.name.to_s.downcase }.each do |ex| %>
+      <option value="<%= ex.id %>" <%= "selected" if selected_id && ex.id == selected_id %>><%= ex.name %></option>
+    <% end %>
+  </optgroup>
+<% end %>
+
+<% standard.group_by { |e|
+     label = e.body_region.to_s
+     label += " — #{e.category}" if e.category.present?
+     label += " — #{e.subcategory}" if e.subcategory.present?
+     label.presence || "Other"
+   }.each do |group_label, group_exercises| %>
+  <optgroup label="<%= group_label %>">
+    <% group_exercises.each do |ex| %>
+      <option value="<%= ex.id %>" <%= "selected" if selected_id && ex.id == selected_id %>><%= ex.name %></option>
+    <% end %>
+  </optgroup>
+<% end %>
