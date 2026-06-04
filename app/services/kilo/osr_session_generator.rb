@@ -153,7 +153,11 @@ class Kilo::OsrSessionGenerator
         rest_seconds: ex[:rest],
         group: nil,
         group_type: nil,
-        map_adjusted: false
+        map_adjusted: false,
+        # A-series slots are the primary strength work (mirrors SessionGenerator).
+        # OSR templates never carry a :primary key, so the position prefix is
+        # sufficient — no need for the standard generator's `|| slot[:primary]`.
+        primary_exercise: ex[:position].to_s.start_with?("A")
       }
     end
   end
@@ -205,7 +209,9 @@ class Kilo::OsrSessionGenerator
         rest_seconds: slot[:rest],
         group: nil,
         group_type: nil,
-        map_adjusted: false
+        map_adjusted: false,
+        # See build_example_session: A-series slots are the primary strength work.
+        primary_exercise: slot[:position].to_s.start_with?("A")
       }
     end
   end
