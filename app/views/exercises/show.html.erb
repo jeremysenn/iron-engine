@@ -50,11 +50,13 @@
           <td class="py-2 font-medium"><%= @exercise.rotation_group.titleize %></td>
         </tr>
         <% end %>
-        <% if @exercise.video_url.present? && @exercise.video_url.match?(%r{\Ahttps?://}i) %>
+        <% if (video_id = youtube_video_id(@exercise.video_url)).present? %>
         <tr class="border-b border-slate-100">
           <td class="py-2 text-slate-500">Video</td>
           <td class="py-2">
-            <%= link_to "Watch Demo", @exercise.video_url, target: "_blank", rel: "noopener", class: "text-teal-600 hover:text-teal-700 font-medium text-sm" %>
+            <%# Build the href from the extracted video id with a literal https scheme
+                so the link can never carry a javascript:/data: payload (Brakeman LinkToHref). %>
+            <%= link_to "Watch Demo", "https://www.youtube.com/watch?v=#{video_id}", target: "_blank", rel: "noopener", class: "text-teal-600 hover:text-teal-700 font-medium text-sm" %>
           </td>
         </tr>
         <% end %>
