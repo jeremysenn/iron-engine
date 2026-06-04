@@ -51,6 +51,12 @@
     </div>
   </div>
 
+  <div>
+    <%= f.label :video_url, "Demo video URL", class: "block text-sm font-medium text-slate-500 mb-1" %>
+    <%= f.url_field :video_url, class: sc, placeholder: "e.g. https://youtu.be/VIDEO_ID" %>
+    <p class="text-xs text-slate-400 mt-1">Paste a YouTube link (watch, share, or embed). Leave blank for no demo.</p>
+  </div>
+
   <div class="flex items-center gap-3 pt-2">
     <%= f.submit class: "px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 cursor-pointer transition-colors" %>
     <%= link_to "Cancel", exercises_path, class: "text-sm text-slate-500 hover:text-slate-700" %>

@@ -77,7 +77,7 @@
   <% if @exercise.video_url.present? %>
     <div class="bg-white rounded-lg border border-slate-200 p-4 mt-4">
       <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-sm text-slate-700 mb-3">Video Demonstration</h3>
-      <% video_id = @exercise.video_url.to_s.split("/").last.split("?").first %>
+      <% video_id = youtube_video_id(@exercise.video_url) %>
       <div class="aspect-video rounded-md overflow-hidden bg-slate-900">
         <iframe src="https://www.youtube.com/embed/<%= video_id %>" class="w-full h-full" frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

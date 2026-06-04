@@ -83,4 +83,16 @@ class SessionExercisesControllerTest < ActionDispatch::IntegrationTest
     @se.reload
     assert_equal other_kilo.id, @se.kilo_exercise_id
   end
+
+  # Request 1: the swap search must surface the coach's user-created exercises,
+  # grouped under a clear "My Custom Exercises" heading (region-less customs
+  # otherwise sort under a blank optgroup).
+  test "workout swap select lists the coach's custom exercises under a labeled group" do
+    KiloExercise.create!(name: "Belt Squat", user: @user, custom: true)
+
+    get client_workout_path(@client, @session)
+
+    assert_response :success
+    assert_select "optgroup[label='My Custom Exercises'] option", text: "Belt Squat"
+  end
 end
