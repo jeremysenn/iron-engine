@@ -58,6 +58,18 @@ class ExercisesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Standard Squat", standard.reload.name
   end
 
+  # The "Watch Demo" link builds its href from the extracted YouTube id with a
+  # literal https scheme (not the raw model attribute), so it can never carry a
+  # javascript:/data: payload. Brakeman LinkToHref flagged the old version.
+  test "show renders a Watch Demo link with a canonical https YouTube URL" do
+    exercise = KiloExercise.create!(name: "Demo Move", body_region: "Upper Body", video_url: "https://youtu.be/dQw4w9WgXcQ")
+
+    get exercise_path(exercise)
+
+    assert_response :success
+    assert_select "a[href='https://www.youtube.com/watch?v=dQw4w9WgXcQ']", text: "Watch Demo"
+  end
+
   private
 
   def build_session_exercise(kilo_exercise:)
