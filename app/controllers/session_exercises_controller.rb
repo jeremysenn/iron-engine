@@ -56,8 +56,9 @@ class SessionExercisesController < ApplicationController
     # typed custom name impossible to save. This matches the form's own hint:
     # "Custom exercise name (leave blank to use selection above)".
     if params[:exercise_name].present?
-      new_name = params[:exercise_name].strip
-      new_kilo_id = nil
+      kilo_ex = find_or_create_custom_exercise(params[:exercise_name].strip)
+      new_name = kilo_ex.name
+      new_kilo_id = kilo_ex.id
     elsif params[:kilo_exercise_id].present?
       kilo_ex = KiloExercise.find(params[:kilo_exercise_id])
       new_name = kilo_ex.name
@@ -83,5 +84,18 @@ class SessionExercisesController < ApplicationController
       @exercise.update!(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
       redirect_to client_program_path(@client, @program), notice: "Exercise updated."
     end
+  end
+
+  # A custom exercise name typed in the swap modal is saved to the coach's
+  # exercise library so it's reusable in future swaps (it shows up in the
+  # swap dropdown via KiloExercise.available_for). If the name already matches
+  # an exercise the coach can see — a standard one or an existing custom — reuse
+  # that instead of creating a duplicate.
+  def find_or_create_custom_exercise(name)
+    KiloExercise.available_for(Current.user).find_by(name: name) ||
+      KiloExercise.create!(name: name, user: Current.user, custom: true)
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+    # Lost a race to create the same custom name; the other request won.
+    KiloExercise.available_for(Current.user).find_by!(name: name)
   end
 end
