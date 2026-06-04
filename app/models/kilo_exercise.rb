@@ -12,4 +12,10 @@ class KiloExercise < ApplicationRecord
   scope :kilo_standard, -> { where(custom: false) }
   scope :custom_for, ->(user) { where(custom: true, user: user) }
   scope :available_for, ->(user) { where(custom: false).or(where(custom: true, user: user)) }
+
+  # Coaches may edit/delete only their own custom exercises. Standard KILO
+  # exercises and other coaches' customs are read-only.
+  def editable_by?(user)
+    custom? && user_id.present? && user_id == user&.id
+  end
 end

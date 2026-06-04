@@ -1,7 +1,10 @@
 <%= page_header @exercise.name do %>
   <div class="flex items-center gap-3">
-    <% if @exercise.custom? %>
+    <% if @exercise.editable_by?(Current.user) %>
       <%= btn_secondary "Edit", edit_exercise_path(@exercise) %>
+      <%= button_to "Delete", exercise_path(@exercise), method: :delete,
+            class: "inline-flex items-center px-4 py-2.5 rounded-md text-sm font-medium text-red-600 border border-red-300 hover:bg-red-50 transition-colors",
+            form: { data: { turbo: false }, onsubmit: "return confirm('Delete this custom exercise? This cannot be undone.')" } %>
     <% end %>
     <%= btn_secondary "Back", exercises_path %>
   </div>
