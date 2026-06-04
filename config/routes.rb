@@ -18,7 +18,7 @@ Rails.application.routes.draw do
     resources :session_exercises, only: %i[update]
   end
 
-  resources :exercises, only: %i[index show new create edit update]
+  resources :exercises, only: %i[index show new create edit update destroy]
 
   # Coach: manage share tokens
   resources :clients, only: [] do
