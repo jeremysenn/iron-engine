@@ -9,7 +9,7 @@ class SessionExercisesController < ApplicationController
       .find(params[:id])
     @program = @exercise.training_session.microcycle.mesocycle.macrocycle.program
 
-    # Handle exercise swap (form-based, full page)
+    # Handle exercise swap (in-place card for inline workout swaps, redirect elsewhere)
     if params[:kilo_exercise_id].present? || params[:exercise_name].present?
       update_exercise_name
       return
@@ -77,12 +77,22 @@ class SessionExercisesController < ApplicationController
         .where(training_sessions: { session_type: session.session_type })
 
       matching.update_all(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
-
-      redirect_to client_program_path(@client, @program),
-        notice: "Exercise updated across all #{matching.count} sessions in #{mesocycle.phase.titleize}."
+      @exercise.reload
+      notice = "Exercise updated across all #{matching.count} sessions in #{mesocycle.phase.titleize}."
     else
       @exercise.update!(exercise_name: new_name, kilo_exercise_id: new_kilo_id)
-      redirect_to client_program_path(@client, @program), notice: "Exercise updated."
+      notice = "Exercise updated."
+    end
+
+    # The Log Workout page swaps in place via fetch (X-Inline-Swap header): we
+    # return just the re-rendered card so its JS can replace that one card,
+    # leaving unsaved weight/reps in the other cards untouched. Every other
+    # caller (and the no-JS fallback) keeps the full-page redirect.
+    if request.headers["X-Inline-Swap"].present?
+      render partial: "workouts/exercise_card",
+        locals: { se: @exercise, program: @program }
+    else
+      redirect_to client_program_path(@client, @program), notice: notice
     end
   end
 

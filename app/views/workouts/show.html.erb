@@ -27,70 +27,12 @@
   </div>
 <% end %>
 
-<%# Swap exercise forms (outside main form to avoid nesting) %>
+<%# Swap exercise modals (outside the main form so their <form> doesn't nest).
+    The submit listener below intercepts these forms and fetches with an
+    X-Inline-Swap header; the controller returns just the re-rendered card,
+    which the JS swaps in via outerHTML, preserving unsaved entries elsewhere. %>
 <% @exercises.each do |se| %>
-  <div id="swap-form-<%= se.id %>" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this) this.classList.add('hidden')">
-    <div class="bg-white rounded-lg shadow-lg border border-slate-200 p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
-      <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-1">Swap Exercise</h3>
-      <p class="text-sm text-slate-500 mb-4">Replace <strong><%= se.exercise_name %></strong> (<%= se.position %>) with:</p>
-
-      <%= form_with url: client_session_exercise_path(@client, se), method: :patch do %>
-        <div class="mb-4">
-          <label class="block text-xs font-medium text-slate-400 mb-1">Search exercises</label>
-          <input type="text" id="search-<%= se.id %>" placeholder="Type to filter..."
-                 class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-2 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1"
-                 oninput="filterExercises(this, 'select-<%= se.id %>')">
-
-          <select name="kilo_exercise_id" id="select-<%= se.id %>" size="10"
-                  class="w-full px-2 py-1 rounded border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
-            <%= render "exercises/swap_options", exercises: @available_exercises, selected_id: se.kilo_exercise_id %>
-          </select>
-        </div>
-
-        <p class="text-xs text-slate-400 mb-3">Or enter a custom exercise name:</p>
-        <input type="text" name="exercise_name" placeholder="Custom exercise name (leave blank to use selection above)"
-               class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-4 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
-
-        <div class="mb-4 bg-slate-50 rounded-md p-3">
-          <label class="block text-xs font-medium text-slate-500 mb-2">Apply change to:</label>
-          <div class="flex gap-4">
-            <label class="flex items-center gap-1.5 text-sm text-slate-600">
-              <input type="radio" name="scope" value="workout" checked class="text-teal-600"> This workout only
-            </label>
-            <label class="flex items-center gap-1.5 text-sm text-slate-600">
-              <input type="radio" name="scope" value="mesocycle" class="text-teal-600"> Entire mesocycle
-            </label>
-          </div>
-          <p class="text-[10px] text-slate-400 mt-1">Mesocycle: updates all weeks in this phase with the same session type</p>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">Save</button>
-          <button type="button" onclick="this.closest('[id^=swap-form]').classList.add('hidden')" class="text-sm text-slate-500 hover:text-slate-700">Cancel</button>
-        </div>
-      <% end %>
-    </div>
-  </div>
-<% end %>
-
-<%# Video demo modals %>
-<% @exercises.each do |se| %>
-  <% if se.kilo_exercise&.video_url.present? %>
-    <div id="video-<%= se.id %>" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60" onclick="if(event.target===this){this.classList.add('hidden');this.querySelector('iframe').src=this.querySelector('iframe').src}">
-      <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 overflow-hidden" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-          <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
-          <button onclick="var m=this.closest('[id^=video]');m.classList.add('hidden');m.querySelector('iframe').src=m.querySelector('iframe').src" class="text-slate-400 hover:text-slate-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <div class="aspect-video">
-          <iframe src="https://www.youtube.com/embed/<%= youtube_video_id(se.kilo_exercise.video_url) %>" class="w-full h-full" frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-      </div>
-    </div>
-  <% end %>
+  <%= render "swap_modal", se: se, client: @client, available_exercises: @available_exercises %>
 <% end %>
 
 <%# Main workout logging form %>
@@ -102,68 +44,7 @@
   </div>
 
   <% @exercises.each do |se| %>
-    <div class="exercise-card bg-white rounded-lg border border-slate-200 overflow-hidden">
-      <div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="font-['JetBrains_Mono',monospace] text-xs text-slate-400 w-6"><%= se.position %></span>
-            <% if se.kilo_exercise&.video_url.present? %>
-              <button type="button" onclick="document.getElementById('video-<%= se.id %>').classList.remove('hidden')" class="shrink-0" title="Watch demo">
-                <img src="<%= youtube_thumbnail(se.kilo_exercise.video_url) %>" alt="" class="w-10 h-7 rounded object-cover hover:ring-2 hover:ring-teal-500" loading="lazy">
-              </button>
-            <% end %>
-            <% if se.kilo_exercise_id %>
-              <%= link_to se.exercise_name, exercise_path(se.kilo_exercise_id), class: "font-medium text-sm text-slate-700 hover:text-teal-600" %>
-            <% else %>
-              <span class="font-medium text-sm text-slate-700"><%= se.exercise_name %></span>
-            <% end %>
-            <% if se.position.start_with?("A") %>
-              <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-slate-100 text-slate-500"><%= @program.a_series_loading_method_resolved.capitalize %></span>
-            <% end %>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-xs text-slate-400 font-['JetBrains_Mono',monospace]"><%= se.tempo %> · <%= se.rest_seconds %>s</span>
-            <button type="button" onclick="document.getElementById('swap-form-<%= se.id %>').classList.remove('hidden')"
-                    class="text-xs text-teal-600 hover:text-teal-700 font-medium">Swap</button>
-          </div>
-        </div>
-      </div>
-
-      <table class="w-full">
-        <thead>
-          <tr class="border-b border-slate-100">
-            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5 w-16">Set</th>
-            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Target</th>
-            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Weight</th>
-            <th class="text-center text-[10px] font-medium text-slate-400 uppercase px-3 py-1.5">Reps</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% se.exercise_sets.order(:set_number).each do |set| %>
-            <tr class="border-b border-slate-50">
-              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-sm text-slate-400"><%= set.set_number %></td>
-              <td class="text-center py-2 font-['JetBrains_Mono',monospace] text-xs text-slate-400">
-                <%= set.target_reps %> reps<% if set.target_weight.to_f > 0 %> <span class="text-slate-500">@ <%= set.target_weight.to_i %></span><% end %>
-              </td>
-              <td class="text-center py-2 px-2">
-                <input type="number" step="0.25" min="0"
-                       name="sets[<%= set.id %>][actual_weight]"
-                       value="<%= set.actual_weight if set.actual_weight.to_f > 0 %>"
-                       placeholder="—"
-                       class="w-24 mx-auto block text-center px-2 py-1.5 rounded border border-slate-200 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1 <%= set.actual_weight.to_f > 0 ? 'bg-teal-50 border-teal-200' : '' %>">
-              </td>
-              <td class="text-center py-2 px-2">
-                <input type="number" min="0"
-                       name="sets[<%= set.id %>][actual_reps]"
-                       value="<%= set.actual_reps if set.actual_reps.to_i > 0 %>"
-                       placeholder="—"
-                       class="w-20 mx-auto block text-center px-2 py-1.5 rounded border border-slate-200 text-sm font-['JetBrains_Mono',monospace] focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1 <%= set.actual_reps.to_i > 0 ? 'bg-teal-50 border-teal-200' : '' %>">
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+    <%= render "exercise_card", se: se, program: @program %>
   <% end %>
 
   <div class="flex items-center gap-3 pt-2">
@@ -173,6 +54,39 @@
 <% end %>
 
 <script>
+// Swap an exercise without losing unsaved weight/reps in the other cards.
+// Intercepts the swap modal's form, posts it in the background, and replaces
+// just that one card. Falls back to a normal submit (redirect) if the request
+// fails, so the worst case matches the pre-existing behavior.
+document.addEventListener("submit", function (e) {
+  var form = e.target;
+  var modal = form.closest && form.closest('[id^="swap-form-"]');
+  if (!modal) return; // not a swap form — leave the main logging form alone
+
+  e.preventDefault();
+  var seId = modal.id.replace("swap-form-", "");
+
+  fetch(form.action, {
+    method: "POST", // form carries _method=patch
+    body: new FormData(form),
+    headers: { "X-Inline-Swap": "1", "Accept": "text/html" }
+  })
+    .then(function (r) {
+      // A redirect means the controller did NOT render a card (e.g. an error
+      // path). Follow it as a real navigation rather than injecting a whole
+      // page into one card.
+      if (r.redirected) { window.location.href = r.url; return null; }
+      return r.ok ? r.text() : Promise.reject(r.status);
+    })
+    .then(function (html) {
+      if (html === null) return; // already navigating
+      var card = document.getElementById("exercise-card-" + seId);
+      if (card) card.outerHTML = html;
+      modal.classList.add("hidden");
+    })
+    .catch(function () { form.submit(); }); // fallback: full-page submit
+});
+
 function filterExercises(input, selectId) {
   const filter = input.value.toLowerCase();
   const select = document.getElementById(selectId);

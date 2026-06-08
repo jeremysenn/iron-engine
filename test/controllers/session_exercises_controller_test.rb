@@ -84,6 +84,49 @@ class SessionExercisesControllerTest < ActionDispatch::IntegrationTest
     assert_equal other_kilo.id, @se.kilo_exercise_id
   end
 
+  # An inline swap from the Log Workout page (X-Inline-Swap header) returns just
+  # the re-rendered card and does NOT redirect, so the page's JS can replace
+  # that one card and the unsaved weight/reps in the other cards survive.
+  test "inline swap returns the re-rendered card and does not redirect" do
+    other_kilo = KiloExercise.create!(name: "Front Squat", body_region: "lower")
+
+    patch client_session_exercise_path(@client, @se),
+      params: { kilo_exercise_id: other_kilo.id, scope: "workout" },
+      headers: { "X-Inline-Swap" => "1" }
+
+    assert_response :success
+    assert_match "exercise-card-#{@se.id}", @response.body
+    assert_match "Front Squat", @response.body
+    assert_equal other_kilo.id, @se.reload.kilo_exercise_id
+  end
+
+  # The mesocycle-scope inline swap reloads @exercise before rendering, so the
+  # returned card must show the NEW exercise (not the stale pre-swap name).
+  test "inline mesocycle-scope swap renders the reloaded card" do
+    other_kilo = KiloExercise.create!(name: "Front Squat", body_region: "lower")
+
+    patch client_session_exercise_path(@client, @se),
+      params: { kilo_exercise_id: other_kilo.id, scope: "mesocycle" },
+      headers: { "X-Inline-Swap" => "1" }
+
+    assert_response :success
+    assert_match "exercise-card-#{@se.id}", @response.body
+    assert_match "Front Squat", @response.body
+    assert_equal other_kilo.id, @se.reload.kilo_exercise_id
+  end
+
+  # Without the inline header (no JS / the program page) the swap keeps the
+  # full-page redirect to the program.
+  test "swap without the inline header still redirects to the program page" do
+    other_kilo = KiloExercise.create!(name: "Front Squat", body_region: "lower")
+
+    patch client_session_exercise_path(@client, @se),
+      params: { kilo_exercise_id: other_kilo.id, scope: "workout" }
+
+    assert_redirected_to client_program_path(@client, @program)
+    assert_equal other_kilo.id, @se.reload.kilo_exercise_id
+  end
+
   # Request 1: the swap search must surface the coach's user-created exercises,
   # grouped under a clear "My Custom Exercises" heading (region-less customs
   # otherwise sort under a blank optgroup).
