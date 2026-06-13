@@ -15,7 +15,7 @@ Rails.application.routes.draw do
       end
     end
     resources :workouts, only: %i[show update]
-    resources :session_exercises, only: %i[update]
+    resources :session_exercises, only: %i[create update]
   end
 
   resources :exercises, only: %i[index show new create edit update destroy]
