@@ -188,6 +188,8 @@
                       <% if session.logged? %>
                         <span class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">Logged<%= " #{session.completed_at.strftime('%-m/%-d')}" if session.completed_at %><%= " · #{format_tonnage(session_actual)}" if session_actual > 0 %></span>
                       <% end %>
+                      <% existing_groups = session.session_exercises.map { |se| se.position.to_s[/\A[A-Za-z]+/] }.compact.uniq.sort %>
+                      <button type="button" onclick="openAddModal('<%= session.id %>', '<%= existing_groups.join(',') %>')" class="text-xs text-slate-500 hover:text-teal-700 font-medium">+ Add exercise</button>
                       <%= link_to "Log Workout", client_workout_path(@client, session), class: "text-xs text-teal-600 hover:text-teal-700 font-medium" %>
                     </div>
                   </div>
@@ -265,7 +267,112 @@
   </div>
 </div>
 
+<%# Shared add-exercise modal %>
+<div id="add-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this) this.classList.add('hidden')">
+  <div class="bg-white rounded-lg shadow-lg border border-slate-200 p-6 w-full max-w-lg mx-4" onclick="event.stopPropagation()">
+    <h3 class="font-['Satoshi',system-ui,sans-serif] font-bold text-base mb-1">Add Exercise</h3>
+    <p class="text-sm text-slate-500 mb-4">Add a new exercise to this session.</p>
+
+    <%= form_with url: client_session_exercises_path(@client), method: :post, id: "add-form", data: { turbo: true } do %>
+      <input type="hidden" name="training_session_id" id="add-session-id">
+
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-slate-400 mb-1">Search exercises</label>
+        <input type="text" id="add-search" placeholder="Type to filter..."
+               class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-2 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1"
+               oninput="filterExercises(this, 'add-select')">
+        <select name="kilo_exercise_id" id="add-select" size="8"
+                class="w-full px-2 py-1 rounded border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+          <%= render "exercises/swap_options", exercises: @available_exercises %>
+        </select>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-3">Or enter a custom exercise name:</p>
+      <input type="text" name="exercise_name" id="add-custom-name" placeholder="Custom exercise name (leave blank to use selection above)"
+             class="w-full px-3 py-2 rounded-md border border-slate-300 text-sm mb-4 focus:outline-2 focus:outline-teal-600 focus:-outline-offset-1">
+
+      <div class="grid grid-cols-4 gap-3 mb-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Group</label>
+          <select name="group" id="add-group" class="w-full px-2 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace]"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Sets</label>
+          <input type="number" name="sets" id="add-sets" value="3" min="1" max="20"
+                 class="w-full px-2 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Reps</label>
+          <input type="text" name="reps" id="add-reps" value="10"
+                 class="w-full px-2 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Rest (s)</label>
+          <input type="number" name="rest_seconds" id="add-rest" value="90" min="0" max="600" step="10"
+                 class="w-full px-2 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-slate-400 mb-1">Tempo</label>
+        <input type="text" name="tempo" id="add-tempo" value="4-0-1-0"
+               class="w-32 px-2 py-2 rounded-md border border-slate-300 text-sm font-['JetBrains_Mono',monospace]">
+        <span class="text-[10px] text-slate-400 ml-2">Reps accept "10" or per-set "8,8,6"</span>
+      </div>
+
+      <div class="mb-4 bg-slate-50 rounded-md p-3">
+        <label class="block text-xs font-medium text-slate-500 mb-2">Apply to:</label>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-1.5 text-sm text-slate-600">
+            <input type="radio" name="scope" value="exercise" checked class="text-teal-600"> This session only
+          </label>
+          <label class="flex items-center gap-1.5 text-sm text-slate-600">
+            <input type="radio" name="scope" value="mesocycle" class="text-teal-600"> Entire mesocycle
+          </label>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-1">Mesocycle: adds to all weeks in this phase with the same session type</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700">Add</button>
+        <button type="button" onclick="document.getElementById('add-modal').classList.add('hidden')" class="text-sm text-slate-500 hover:text-slate-700">Cancel</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
 <script>
+function openAddModal(sessionId, groupsCsv) {
+  document.getElementById('add-session-id').value = sessionId;
+  document.getElementById('add-search').value = '';
+  document.getElementById('add-custom-name').value = '';
+  document.getElementById('add-sets').value = '3';
+  document.getElementById('add-reps').value = '10';
+  document.getElementById('add-rest').value = '90';
+  document.getElementById('add-tempo').value = '4-0-1-0';
+
+  var sel = document.getElementById('add-select');
+  sel.querySelectorAll('option').forEach(function(o) { o.style.display = ''; });
+  sel.querySelectorAll('optgroup').forEach(function(g) { g.style.display = ''; });
+
+  var groups = groupsCsv ? groupsCsv.split(',').filter(Boolean) : [];
+  var groupSel = document.getElementById('add-group');
+  groupSel.innerHTML = '';
+  groups.forEach(function(g) {
+    var o = document.createElement('option');
+    o.value = g; o.textContent = 'Group ' + g;
+    groupSel.appendChild(o);
+  });
+  var maxCode = groups.reduce(function(m, g) { return Math.max(m, g.charCodeAt(0)); }, 64); // 'A' - 1
+  var next = String.fromCharCode(maxCode + 1);
+  var n = document.createElement('option');
+  n.value = next; n.textContent = 'New group (' + next + ')';
+  groupSel.appendChild(n);
+  groupSel.value = groups.length ? groups[groups.length - 1] : next;
+
+  document.getElementById('add-modal').classList.remove('hidden');
+}
+
 function openSwapModal(exerciseId, exerciseName, position, updateUrl) {
   document.getElementById('swap-exercise-name').textContent = exerciseName;
   document.getElementById('swap-position').textContent = position;
